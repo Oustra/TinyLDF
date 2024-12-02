@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OneTupleTR.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">WebAndCloud2</a> &gt; <a href="index.source.html" class="el_package">foo</a> &gt; <span class="el_source">OneTupleTR.java</span></div><h1>OneTupleTR.java</h1><pre class="source lang-java linenums">package foo;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.google.appengine.api.ThreadManager;
+import com.google.appengine.api.datastore.DatastoreService;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+
+import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.EntityNotFoundException;
+import com.google.appengine.api.datastore.FetchOptions;
+import com.google.appengine.api.datastore.Key;
+import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.datastore.KeyRange;
+import com.google.appengine.api.datastore.PreparedQuery;
+import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.Query.FilterOperator;
+import com.google.appengine.api.datastore.Query.FilterPredicate;
+import com.google.appengine.api.datastore.Transaction;
+import com.google.appengine.api.datastore.TransactionOptions;
+
+//Exception in thread &quot;Thread-18&quot; java.lang.IllegalArgumentException: cross-group transaction need to be explicitly specified, see TransactionOptions.Builder.withXGfound both Element {
+//	  type: &quot;Reg&quot;
+//	  name: &quot;x&quot;
+//	}
+//	 and Element {
+//	  type: &quot;Reg&quot;
+//	  name: &quot;y&quot;
+//	}
+
+
+@WebServlet(name = &quot;OneTupleTR&quot;, urlPatterns = { &quot;/onetuple&quot; })
+<span class="nc" id="L43">public class OneTupleTR extends HttpServlet {</span>
+<span class="nc" id="L44">	public static int j =5;</span>
+	@Override
+	public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+
+<span class="nc" id="L48">		response.setContentType(&quot;text/html&quot;);</span>
+<span class="nc" id="L49">		response.setCharacterEncoding(&quot;UTF-8&quot;);</span>
+
+<span class="nc" id="L51">		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();</span>
+<span class="nc" id="L52">		Entity xe = new Entity(&quot;Reg&quot;, &quot;x&quot;);</span>
+<span class="nc" id="L53">		xe.setProperty(&quot;val&quot;, 0);</span>
+<span class="nc" id="L54">		datastore.put(xe);</span>
+
+<span class="nc" id="L56">		Entity ye = new Entity(&quot;Reg&quot;, &quot;y&quot;);</span>
+<span class="nc" id="L57">		ye.setProperty(&quot;val&quot;, 0);</span>
+<span class="nc" id="L58">		datastore.put(ye);</span>
+
+		
+		try {
+<span class="nc" id="L62">			response.getWriter().println(&quot;initial value: x(&quot;+datastore.get(xe.getKey()).getProperty(&quot;val&quot;)+&quot;),y(&quot;+datastore.get(ye.getKey()).getProperty(&quot;val&quot;)+&quot;)&lt;br&gt;&quot;);</span>
+<span class="nc" id="L63">		} catch (EntityNotFoundException e2) {</span>
+			// TODO Auto-generated catch block
+<span class="nc" id="L65">			e2.printStackTrace();</span>
+		}
+
+<span class="nc" id="L68">		Thread[] th=new Thread[2];</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		for (int i=0;i&lt;th.length;i++) {			</span>
+<span class="nc" id="L70">			th[i]=ThreadManager.createThreadForCurrentRequest(new Runnable()  {</span>
+				public void run() {
+<span class="nc" id="L72">					DatastoreService ds = DatastoreServiceFactory.getDatastoreService();</span>
+					// Cross Group transaction
+					// without -&gt; exception Cross Group TR
+<span class="nc" id="L75">					TransactionOptions options = TransactionOptions.Builder.withXG(true);</span>
+<span class="nc" id="L76">					Transaction txn=ds.beginTransaction(options);</span>
+					try {
+<span class="nc" id="L78">						Entity x = datastore.get(xe.getKey());</span>
+<span class="nc" id="L79">						Long xv=(Long)x.getProperty(&quot;val&quot;);</span>
+<span class="nc" id="L80">						Entity y = datastore.get(ye.getKey());</span>
+<span class="nc" id="L81">						Long yv=(Long)x.getProperty(&quot;val&quot;);</span>
+
+						// UN SLEEP DE CONTENTION
+<span class="nc" id="L84">						Thread.sleep(100);</span>
+<span class="nc" id="L85">						x.setProperty(&quot;val&quot;, xv+1);</span>
+<span class="nc" id="L86">						response.getWriter().print(&quot;Thread:&quot;+Thread.currentThread()+&quot;,xval:&quot;+xv+&quot;,yval:&quot;+yv+&quot;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L87">						y.setProperty(&quot;val&quot;, xv+1);</span>
+<span class="nc" id="L88">						ds.put(x);</span>
+<span class="nc" id="L89">						ds.put(y);</span>
+<span class="nc" id="L90">						txn.commit();</span>
+<span class="nc" id="L91">					} catch (EntityNotFoundException | IOException e) {</span>
+						// TODO Auto-generated catch block
+<span class="nc" id="L93">						e.printStackTrace();</span>
+<span class="nc" id="L94">					} catch (InterruptedException e1) {</span>
+						// TODO Auto-generated catch block
+<span class="nc" id="L96">						e1.printStackTrace();</span>
+					} finally {
+<span class="nc bnc" id="L98" title="All 2 branches missed.">						if (txn.isActive()) {</span>
+							try {
+<span class="nc" id="L100">								response.getWriter().print(&quot;Thread:&quot;+Thread.currentThread()+&quot; abort &quot;);</span>
+<span class="nc" id="L101">							} catch (IOException e) {</span>
+								// TODO Auto-generated catch block
+<span class="nc" id="L103">								e.printStackTrace();</span>
+									}
+<span class="nc" id="L105">							txn.rollback();</span>
+						}
+					}
+<span class="nc" id="L108">				}</span>
+			});
+<span class="nc" id="L110">			th[i].start();</span>
+		}
+
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		for (Thread thread : th) {</span>
+			try {
+<span class="nc" id="L115">				thread.join();</span>
+<span class="nc" id="L116">			} catch (InterruptedException e1) {</span>
+				// TODO Auto-generated catch block
+<span class="nc" id="L118">				e1.printStackTrace();</span>
+			}
+		}
+		
+		try {
+<span class="nc" id="L123">			response.getWriter().print(&quot;final value x(:&quot;+datastore.get(xe.getKey()).getProperty(&quot;val&quot;)+&quot;)&quot;);</span>
+<span class="nc" id="L124">			response.getWriter().print(&quot;final value y(:&quot;+datastore.get(ye.getKey()).getProperty(&quot;val&quot;)+&quot;)&quot;);</span>
+<span class="nc" id="L125">		} catch (EntityNotFoundException e1) {</span>
+			// TODO Auto-generated catch block
+<span class="nc" id="L127">			e1.printStackTrace();</span>
+		}
+<span class="nc" id="L129">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

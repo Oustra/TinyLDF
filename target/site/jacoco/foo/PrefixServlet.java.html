@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PrefixServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">WebAndCloud2</a> &gt; <a href="index.source.html" class="el_package">foo</a> &gt; <span class="el_source">PrefixServlet.java</span></div><h1>PrefixServlet.java</h1><pre class="source lang-java linenums">package foo;
+
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.Month;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.google.appengine.api.datastore.DatastoreService;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+
+import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.EntityNotFoundException;
+import com.google.appengine.api.datastore.FetchOptions;
+import com.google.appengine.api.datastore.Key;
+import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.datastore.KeyRange;
+import com.google.appengine.api.datastore.PreparedQuery;
+import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.Query.FilterOperator;
+import com.google.appengine.api.datastore.Query.FilterPredicate;
+import  java.util.concurrent.ThreadLocalRandom;
+
+@WebServlet(name = &quot;PrefixServlet&quot;, urlPatterns = { &quot;/prefix&quot; })
+<span class="nc" id="L34">public class PrefixServlet extends HttpServlet {</span>
+
+<span class="nc" id="L36">	static Random r = new Random();</span>
+
+	
+	public LocalDate between(LocalDate startInclusive, LocalDate endExclusive) {
+<span class="nc" id="L40">	    long startEpochDay = startInclusive.toEpochDay();</span>
+<span class="nc" id="L41">	    long endEpochDay = endExclusive.toEpochDay();</span>
+<span class="nc" id="L42">	    long randomDay = ThreadLocalRandom</span>
+<span class="nc" id="L43">	    	      .current()</span>
+<span class="nc" id="L44">	    	      .nextLong(startEpochDay, endEpochDay);</span>
+<span class="nc" id="L45">	    return LocalDate.ofEpochDay(randomDay);</span>
+	}
+	
+	@Override
+	public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+
+<span class="nc" id="L51">		response.setContentType(&quot;text/html&quot;);</span>
+<span class="nc" id="L52">		response.setCharacterEncoding(&quot;UTF-8&quot;);</span>
+
+<span class="nc" id="L54">		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();</span>
+
+		
+<span class="nc" id="L57">		LocalDate start = LocalDate.of(2019, Month.OCTOBER, 14);</span>
+<span class="nc" id="L58">		LocalDate end = LocalDate.now();</span>
+
+		
+		
+		// Create posts
+<span class="nc bnc" id="L63" title="All 2 branches missed.">		for (int i = 0; i &lt; 100; i++) {</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">			for (int j=0;j&lt;10;j++) {</span>
+<span class="nc" id="L65">				LocalDate rdate = this.between(start, end);</span>
+<span class="nc" id="L66">				Entity e = new Entity(&quot;Post&quot;, &quot;f&quot; +i+&quot;:&quot;+rdate.toString());</span>
+<span class="nc" id="L67">				e.setProperty(&quot;body&quot;, &quot;blabla&quot; + rdate.toString());</span>
+<span class="nc" id="L68">				e.setProperty(&quot;url&quot;, &quot;https://dummyimage.com/320x200/000/fff.jpg&amp;text=&quot;+rdate.toString());</span>
+<span class="nc" id="L69">				e.setProperty(&quot;owner&quot;, &quot;f&quot; + i);</span>
+<span class="nc" id="L70">				e.setProperty(&quot;date&quot;,new Date());</span>
+
+				// Create user friends
+<span class="nc" id="L73">				HashSet&lt;String&gt; toset = new HashSet&lt;String&gt;();</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">				while (toset.size() &lt; 5) {</span>
+<span class="nc" id="L75">					toset.add(&quot;f&quot; + r.nextInt(100));</span>
+				}
+<span class="nc" id="L77">				e.setProperty(&quot;to&quot;, toset);</span>
+
+<span class="nc" id="L79">				HashSet&lt;String&gt; like = new HashSet&lt;String&gt;();</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">				while (like.size() &lt; 5) {</span>
+<span class="nc" id="L81">					like.add(&quot;f&quot; + r.nextInt(100));</span>
+				}
+<span class="nc" id="L83">				e.setProperty(&quot;like&quot;, like);</span>
+<span class="nc" id="L84">				e.setProperty(&quot;likec&quot;,like.size());</span>
+				
+<span class="nc" id="L86">				datastore.put(e);</span>
+<span class="nc" id="L87">				response.getWriter().print(&quot;&lt;li&gt; created post:&quot; + e.getKey() + &quot;&lt;br&gt;&quot; + toset + &quot;&lt;br&gt;&quot;);</span>
+			}
+
+		}
+<span class="nc" id="L91">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>
