@@ -1,29 +1,4 @@
 GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
 WebAndCloud2,counters,TheGlobalCounter,91,0,2,0,26,0,3,0,2,0
-WebAndCloud2,foo,Consistency.new Runnable() {...},55,0,2,0,13,0,3,0,2,0
-WebAndCloud2,foo,Consistency.new Runnable() {...},47,0,2,0,11,0,3,0,2,0
-WebAndCloud2,foo,Consistency.new Runnable() {...},63,0,2,0,15,0,3,0,2,0
-WebAndCloud2,foo,PrefixServlet,148,0,8,0,33,0,8,0,4,0
-WebAndCloud2,foo,FriendQuery,308,0,8,0,55,0,6,0,2,0
-WebAndCloud2,foo,FriendServlet,82,0,4,0,17,0,4,0,2,0
-WebAndCloud2,foo,PrefixClean,52,0,2,0,11,0,3,0,2,0
-WebAndCloud2,foo,Counting.new Runnable() {...},64,0,2,0,12,0,3,0,2,0
-WebAndCloud2,foo,FriendBlockServlet,107,0,6,0,21,0,5,0,2,0
+WebAndCloud2,foo,ScoreEndpoint,182,0,16,0,41,0,14,0,6,0
 WebAndCloud2,foo,HelloAppEngine,3,70,0,0,1,15,0,3,0,3
-WebAndCloud2,foo,CountingTR.new Runnable() {...},88,0,4,0,21,0,4,0,2,0
-WebAndCloud2,foo,OneTupleTR,142,0,4,0,27,0,5,0,3,0
-WebAndCloud2,foo,CountingTR,108,0,4,0,23,0,5,0,3,0
-WebAndCloud2,foo,PostMessage,3,0,0,0,1,0,1,0,1,0
-WebAndCloud2,foo,PetitionQuery,123,0,4,0,24,0,4,0,2,0
-WebAndCloud2,foo,RandomResult,9,0,0,0,3,0,1,0,1,0
-WebAndCloud2,foo,CountingSh.new Runnable() {...},93,0,4,0,19,0,4,0,2,0
-WebAndCloud2,foo,MsgIndex,204,0,4,0,35,0,4,0,2,0
-WebAndCloud2,foo,PrefixQuery,259,0,8,0,48,0,6,0,2,0
-WebAndCloud2,foo,CountingSh,133,0,8,0,25,0,6,0,2,0
-WebAndCloud2,foo,ScoreEndpoint,400,0,14,0,91,0,20,0,13,0
-WebAndCloud2,foo,Consistency,144,0,6,0,36,0,6,0,3,0
-WebAndCloud2,foo,UsersServlet,33,0,2,0,15,0,3,0,2,0
-WebAndCloud2,foo,OneTupleTR.new Runnable() {...},114,0,2,0,25,0,3,0,2,0
-WebAndCloud2,foo,TestTransaction,70,0,4,0,14,0,4,0,2,0
-WebAndCloud2,foo,PetitionServlet,180,0,10,0,35,0,7,0,2,0
-WebAndCloud2,foo,Counting,105,0,4,0,22,0,4,0,2,0

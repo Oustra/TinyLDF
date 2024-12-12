@@ -24,117 +24,185 @@
 
 <script>	
 
-var DiceGame = {
-  turn: 0,
-  d1: 1,
-  d2: 1,
-  name: '', 
-  score: 0,
-
-  play: function() {
-    if (this.turn < 10) {
-      this.d1 = Math.floor((Math.random() * 5) + 1);
-      this.d2 = Math.floor((Math.random() * 5) + 1);
-      if (this.d1 + this.d2 === 7) {
-        this.score += 10;
-      }
-      this.turn++;
-    } else {
-      Score.save(this.score, this.name);
-      this.turn = 0;
-      this.score = 0;
-    }
-  }
-};
-
 var LDFView = {
+  subject: '',
+  predicate: '',
+  object: '',
+
   view: function() {
     return m('div', [
-      m('div', { class: 'title' }, "Query TinyLDF by triple pattern"),
-      m("input[type=text][placeholder=subject]", {
-        //value: DiceGame.name,
-        class: 'input',
-      }),
-      m("input[type=text][placeholder=predicate]", {
-        //value: DiceGame.name,
-        class: 'input',
-      }),
-      m("input[type=text][placeholder=object]", {
-        //value: DiceGame.name,
-        class: 'input',
-      }),
+      m('div', { style: 'font-size:19px; font-weight:bold;margin-bottom:12px; color:#333333;' }, "Query TinyLDF by triple pattern"),
+      m('div', { style: 'margin-bottom: 10px; margin-left:27px;' }, [
+        m('label', { style: 'display: inline-block; width: 80px; font-weight: bold;' }, "subject:"),
+        m("input[type=text]", {
+          value: LDFView.subject,
+          oninput: function(e) { LDFView.subject = e.target.value; },
+          style: 'width: 70%; border: none; border-bottom: 1px solid #ccc; outline: none; color: #be1622;'
+        })
+      ]),
+      m('div', { style: 'margin-bottom: 10px; margin-left:27px;' }, [
+        m('label', { style: 'display: inline-block; width: 80px; font-weight: bold;' }, "predicate:"),
+        m("input[type=text]", {
+          value: LDFView.predicate,
+          oninput: function(e) { LDFView.predicate = e.target.value; },
+          style: 'width: 70%; border: none; border-bottom: 1px solid #ccc; outline: none; color: #be1622;'
+        })
+      ]),
+      m('div', { style: 'margin-bottom: 10px; margin-left:27px;' }, [
+        m('label', { style: 'display: inline-block; width: 80px; font-weight: bold;' }, "object:"),
+        m("input[type=text]", {
+          value: LDFView.object,
+          oninput: function(e) { LDFView.object = e.target.value; },
+          style: 'width: 70%; border: none; border-bottom: 1px solid #ccc; outline: none; color: #be1622;'
+        })
+      ]),
      
       m('button', {
-        class: 'button is-link',
+        class: 'custom-button',
+        style: {
+          border: '0.7px solid black',
+          backgroundColor: '#f6f6f6',
+          padding: '4px 8px',
+          cursor: 'pointer',
+          borderRadius: '5px',
+          marginRight: '10px'
+        },
         onclick: function(e) {
-          //DiceGame.play()
+          Triplet.search(LDFView.subject, LDFView.predicate, LDFView.object);
         }
-      }, "Add triples"),
+      }, m('span', {
+        style: {
+          color: '#be1622',
+          fontWeight: 'bold',
+          fontSize: '15px'
+        }
+      }, "Find matching triples")),
 
       m('button', {
-        class: 'button is-link',
+        class: 'custom-button',
+        style: {
+          border: '0.7px solid black',
+          backgroundColor: '#f6f6f6',
+          padding: '4px 8px',
+          cursor: 'pointer',
+          borderRadius: '5px',
+          display: Login.name === '' ? 'none' : 'inline-block'
+        },
         disabled: Login.name === '',
         onclick: function(e) {
-          DiceGame.play()
+          Triplet.save(LDFView.subject, LDFView.predicate, LDFView.object);
+          LDFView.subject = '';
+          LDFView.predicate = '';
+          LDFView.object = '';
+          m.redraw();
         }
-      }, "Find matching triples"),
+      }, m('span', {
+        style: {
+          color: '#be1622',
+          fontWeight: 'bold',
+          fontSize: '15px'
+        }
+      }, "Add triples")),
     ]);
   }
 };
 
-var Score = {
+var Triplet = {
 	    list: [],
+      noResultMessage : null,
 	    loadList: function() {
 	        return m.request({
 	            method: "GET",
-	            url: "_ah/api/myApi/v1/topscores/"
+              url: "_ah/api/myApi/v1/showTriplets/"
 	        })
 	        .then(function(result) {
-	            Score.list = result.items
+            Triplet.list = result.items
 	        	console.log("got:",result.items)
 	        	// m.redraw(true)
 	        })
 	    },
-	    save: function(score,name) {
-	    	console.log("saving...",Score.current)
-	        return m.request({
-	            method: "GET",
-              //url: "_ah/api/myApi/v1/addScore/"+score+"/"+name
-              //url: "_ah/api/myApi/v1/addScoreSec/"+score+"/"+name
-              url: `_ah/api/myApi/v1/addScoreSec/${score}/${name}?access_token=${Login.token}`
-	        })
-	        .then(function(result) {
-	        	console.log("got:",result)
-	        	Score.loadList()
-            MyScore.loadList()
-	        })
-			    .catch(function(error) {
-    			  console.error("Error saving score:", error);
-    			  alert("Error saving score hhhh, please try again!");
-  			  })
-	    }
+	    save: function(subject, predicate, object) {
+	    	console.log("saving...",Triplet.current)
+        if (!subject || !predicate || !object) {
+          alert("Please fill in all fields (subject, predicate, object).");
+          return;
+        }
+
+        return m.request({
+            method: "GET",
+            url: `_ah/api/myApi/v1/addTriplet/${subject}/${predicate}/${object}`+'?access_token=' + Login.token
+        })
+        .then(function(result) {
+          console.log("got:",result)
+          Triplet.loadList()
+        })
+        .catch(function(error) {
+          console.error("Error saving triplet:", error);
+          alert("Error saving triplet hhhh, please try again!");
+        })
+	    },
+
+      search: function(subject, predicate, object) {
+        console.log("searching...", Triplet.current);
+        
+        var queryParams = [];
+        if (subject) queryParams.push(`subject=${encodeURIComponent(subject)}`);
+        if (predicate) queryParams.push(`predicate=${encodeURIComponent(predicate)}`);
+        if (object) queryParams.push(`object=${encodeURIComponent(object)}`);
+        
+        var queryString = queryParams.length > 0 ? '?' + queryParams.join('&') : '';
+        
+        return m.request({
+            method: "GET",
+            url: `_ah/api/myApi/v1/searchTriplet${queryString}`
+        })
+        .then(function(result) {
+          console.log("got:", result);
+          if (result.items && result.items.length > 0) {
+            Triplet.list = result.items;
+            Triplet.noResultMessage = null; 
+          }
+          else {
+            Triplet.list = [];
+            Triplet.noResultMessage = "TinyLDF contains no triples that match this pattern.";
+          }
+          if (Triplet.list.length !== 0){
+            Triplet.noResultMessage = null;
+          }
+          m.redraw(true);
+        })
+        .catch(function(error) {
+            console.error("Error searching triplet:", error);
+            alert("Error searching for triplet XD, please try again!");
+        });
+      }
 	}
 
-var TripleView = {
-  oninit: Score.loadList,
+  var TripleView = {
+  oninit: Triplet.loadList,
   view: function() {
-   	return m('div', [
-	  m('div',{class:'title'},"Matches in Wikidata for"),
-	  m('table', {class:'table is-striped'},[
-	    m('tr', [
-	      m('th', {width:"30%"}, "Subject"),
-	      m('th', {width:"30%"}, "Predicate"),
-        m('th', {width:"30%"}, "Object"),
-	    ]),
-	    Score.list.map(function(item) {
-	      return m("tr", [
-  	        m('td', m('label', item.properties.name)),
-	        m('td', m('label', item.properties.score)),
-          m('td', m('label', item.properties.score)),
-	      ])
-	    })
-	   ])
-	 ])
+    return m('div', [
+      m('div', { style: 'width:100%; font-size:19px; font-weight:bold; margin-bottom:10px; color:#333333;' }, "Matches in TinyLDF for"),
+      m('table', {class: 'table is-striped', style: "width:100%; text-align: center;"}, [
+        m('thead', 
+          m('tr', [
+            m('th', {style: "width:33%; text-align: center;"}, "Subject"),
+            m('th', {style: "width:33%; text-align: center;"}, "Predicate"),
+            m('th', {style: "width:33%; text-align: center;"}, "Object"),
+          ])
+        ),
+        m('tbody', 
+          Triplet.list.map(function(item) {
+            return m("tr", [
+              m('td', {style: "text-align: center;"}, m('label', item.properties.subject)),
+              m('td', {style: "text-align: center;"}, m('label', item.properties.predicate)),
+              m('td', {style: "text-align: center;"}, m('label', item.properties.object)),
+            ])
+          })
+        ),
+      ]),
+      m('div', { style: 'margin-top: 10px; color: #BEBEBE;' }, Triplet.noResultMessage)
+    ])
   }
 }
 
@@ -144,6 +212,7 @@ var Login = {
   ID:"",
   url:"",
   token:"",
+  loggedIn:false,
   handleCredential: function(response) {
     console.log("callback called:"+response.credential)
     // decodeJwtResponse() is a custom function defined by you
@@ -157,23 +226,20 @@ var Login = {
     console.log("Image URL: " + responsePayload.picture);
     console.log("Email: " + responsePayload.email);
 
-    DiceGame.name= responsePayload.name
     Login.name= responsePayload.name
     Login.email= responsePayload.email
     Login.ID= response.credential
     Login.url= responsePayload.picture 
 	  Login.token= response.credential
-    // external event
-    //MyScore.loadList()
+    Login.loggedIn= true
     m.redraw()
+  }
 }
 
-}
-
-var LoginView = {
+var LoginView2 = {
     view: function() {
  	    return m('div', {class:'container'}, [
-      m("h1", {class: 'title'}, 'Login'),
+      m("h1", {style: 'font-size:19px; font-weight:bold;margin-bottom:10px; color:#333333;'}, 'Login'),
       m("div", {
       	   "id":"g_id_onload",
       	   "data-client_id":"418717520776-vd1hi1ukmn4494md8h75odm29dn05n8i.apps.googleusercontent.com",
@@ -181,29 +247,80 @@ var LoginView = {
       m("div", {
       	   "class":"g_id_signin",
       	   "data-type":"standard"}),
-      m("li", {class: 'content'}, "name: "+Login.name),
-      m("li", {class: 'content'}, "email: "+Login.email),
-      m("img",{"src":Login.url}),
+      m("li", {style: 'margin-left:27px; font-weight:bold; margin-bottom:12px;'}, "name: "+Login.name),
+      m("li", {style: 'margin-left:27px; font-weight:bold; margin-bottom:12px;'}, "email: "+Login.email),
+      //m("img",{"src":Login.url}),
       ])
     }
-
 }
+
+var LoginView = {
+  view: function () {
+    return m("div", { 
+      class: "header", 
+      style: "display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ccc; padding-top:0;" 
+    }, [
+      Login.loggedIn
+        ? m("div", { style: "display: flex; align-items: center;" }, [
+            m("img", {
+              src: Login.url,
+              alt: "Profile Picture",
+              style: "width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;",
+            }),
+            m("span", { style: "font-size: 16px; font-weight: bold; color: #333;" }, Login.name),
+          ])
+        : m("div", { style: "display: flex; align-items: center;" }, [
+            m("img", {
+              src: "guest.jpg",
+              alt: "Guest",
+              style: "width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;",
+            }),
+            m("span", { style: "font-size: 16px; font-weight: bold; color: #333;" }, "Guest"),
+          ]),
+      m("div", [
+        m("div", {
+          id: "g_id_onload",
+          "data-client_id": "418717520776-vd1hi1ukmn4494md8h75odm29dn05n8i.apps.googleusercontent.com",
+          "data-callback": "handleCredentialResponse",
+        }),
+        m("div", {
+          class: "g_id_signin",
+          "data-type": "standard",
+          style: !Login.loggedIn ? "" : "display: none;", // Hide button when logged in
+        }),
+      ]),
+    ]);
+  },
+};
 
 function handleCredentialResponse(response) {
     console.log("callback called:"+response.credential)
     Login.handleCredential(response)
 }
 
+document.body.style.backgroundColor = "#f6f6f6";
+
 var Hello = {
-   view: function() {
-   	return m('div', {class:'container box', style: "width: 70%; margin: 0 auto; padding: 4%;"}, [
-           m("h1", {class: 'title'}, 'TinyLDF'),
-           m("div", {style: "margin-bottom: 20px;"} ,m(LoginView)),
-           m("div", {style: "margin-bottom: 20px;"},m(LDFView)),
-           m("div", {style: "margin-bottom: 20px;"},m(TripleView)),
-           
-       ])
-   }
+    view: function() {
+        return m('div', {
+            class: 'container box',
+            style: "width: 70%; min-width:560px; margin: 0 auto; padding: 14px 4% 1%; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.8); position: relative;"
+        }, [
+            m("div", {style: "margin-bottom: 20px;"}, m(LoginView)),
+            m("img", {
+                src: "TLDLogo.png",
+                alt: "TLD Logo",
+                style: "position: absolute; top: 80px; right: 50px; width: 145px; height: auto;"
+            }),
+            m("h1", {style: 'font-size:30px; font-weight:bolder; color:black; margin-bottom:10px;'}, 'TinyLDF'),
+            m("h1", {style: 'font-size:23px; font-weight:bold; color:#be1622; margin-bottom:5px;'}, 'TinyLDF'),
+            m("div", {style: "margin-bottom: 20px;"}, m(LDFView)),
+            m("div", {style: "margin-bottom: 20px;"}, m(TripleView)),
+            m("div", [
+              m("span",{style: "color: #B2B2B2; font-size:14px;"}, "Powered by a Tiny Linked Data Fragments  ©2024–2025 Nantes University - Oustra"),
+            ])
+        ])
+    }
 }
 m.mount(document.body, Hello)	
 

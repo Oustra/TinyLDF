@@ -1,10 +1,13 @@
 indexes:
-- kind: "Friend"
+- kind: "Triplet"
   properties:
-  - name: "friends"
-  - name: "age"
-- kind: "Score"
+  - name: "subject"
+    direction: asc
+- kind: "Triplet"
   properties:
-  - name: "name"
-  - name: "score"
-    direction: desc
+  - name: "predicate"
+    direction: asc
+- kind: "Triplet"
+  properties:
+  - name: "object"
+    direction: asc

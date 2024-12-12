@@ -54,28 +54,9 @@ import com.google.appengine.api.datastore.Transaction;
 
 public class ScoreEndpoint {
 
-
-	Random r = new Random();
-
-    // remember: return Primitives and enums are not allowed. 
-	@ApiMethod(name = "getRandom", httpMethod = HttpMethod.GET)
-	public RandomResult random() {
-		return new RandomResult(r.nextInt(6) + 1);
-	}
-
-	@ApiMethod(name = "hello", httpMethod = HttpMethod.GET)
-	public User Hello(User user) throws UnauthorizedException {
-        if (user == null) {
-			throw new UnauthorizedException("Invalid credentials");
-		}
-        System.out.println("Yeah:"+user.toString());
-		return user;
-	}
-
-
-	@ApiMethod(name = "scores", httpMethod = HttpMethod.GET)
-	public List<Entity> scores() {
-		Query q = new Query("Score").addSort("score", SortDirection.DESCENDING);
+	@ApiMethod(name = "showTriplets", httpMethod = HttpMethod.GET)
+	public List<Entity> showTriplets() {
+		Query q = new Query("Triplet");
 
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 		PreparedQuery pq = datastore.prepare(q);
@@ -83,14 +64,47 @@ public class ScoreEndpoint {
 		return result;
 	}
 
-	@ApiMethod(name = "topscores", httpMethod = HttpMethod.GET)
-	public List<Entity> topscores() {
-		Query q = new Query("Score").addSort("score", SortDirection.DESCENDING);
-
+	@ApiMethod(name = "searchTriplet", httpMethod = HttpMethod.GET, path = "searchTriplet")
+	public List<Entity> searchTriplet(
+		@Nullable @Named("subject") String subject,
+		@Nullable @Named("predicate") String predicate,
+		@Nullable @Named("object") String object) throws UnauthorizedException {
+		
+		Query q = new Query("Triplet");
+		
+		if (subject != null && !subject.isEmpty()) {
+			q.setFilter(new FilterPredicate("subject", FilterOperator.EQUAL, subject));
+		}
+		
+		if (predicate != null && !predicate.isEmpty()) {
+			q.setFilter(new FilterPredicate("predicate", FilterOperator.EQUAL, predicate));
+		}
+		
+		if (object != null && !object.isEmpty()) {
+			q.setFilter(new FilterPredicate("object", FilterOperator.EQUAL, object));
+		}
+		
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 		PreparedQuery pq = datastore.prepare(q);
-		List<Entity> result = pq.asList(FetchOptions.Builder.withLimit(10));
+		List<Entity> result = pq.asList(FetchOptions.Builder.withLimit(100));
 		return result;
+	}
+
+	@ApiMethod(name = "addTriplet", httpMethod = HttpMethod.GET)
+	public Entity addTriplet(User user, @Named("subject") String subject, @Named("predicate") String predicate, @Named("object") String object) throws UnauthorizedException {
+		System.out.println("The User is : " +user);
+		if (user == null) {
+			throw new UnauthorizedException("Invalid credentials");
+		}
+		Entity e = new Entity("Triplet", "" + subject + predicate + object);
+		e.setProperty("subject", subject);
+		e.setProperty("predicate", predicate);
+		e.setProperty("object", object);
+
+		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+		datastore.put(e);
+
+		return e;
 	}
 
 	@ApiMethod(name = "myscores", httpMethod = HttpMethod.GET)
@@ -104,20 +118,6 @@ public class ScoreEndpoint {
 		List<Entity> result = pq.asList(FetchOptions.Builder.withLimit(10));
 		return result;
 	}
-
-	@ApiMethod(name = "addScore", httpMethod = HttpMethod.GET)
-	public Entity addScore(@Named("score") int score, @Named("name") String name) throws UnauthorizedException {
-
-		Entity e = new Entity("Score", "" + name + score);
-		e.setProperty("name", name);
-		e.setProperty("score", score);
-
-		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-		datastore.put(e);
-
-		return e;
-	}
-
 
 	@ApiMethod(name = "addScoreSec", httpMethod = HttpMethod.GET)
 	public Entity addScoreSec(User user,@Named("score") int score, @Named("name") String name) throws UnauthorizedException {
@@ -136,145 +136,7 @@ public class ScoreEndpoint {
 		return e;
 	}
 
-	@ApiMethod(name = "postMessage", httpMethod = HttpMethod.POST)
-	public Entity postMessage(PostMessage pm) {
 
-		Entity e = new Entity("Post"); // quelle est la clef ?? non specifié -> clef automatique
-		e.setProperty("owner", pm.owner);
-		e.setProperty("url", pm.url);
-		e.setProperty("body", pm.body);
-		e.setProperty("likec", 0);
-		e.setProperty("date", new Date());
-
-		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-		Transaction txn = datastore.beginTransaction();
-		datastore.put(e);
-		txn.commit();
-		return e;
-	}
-
-	@ApiMethod(name = "mypost", httpMethod = HttpMethod.GET)
-	public CollectionResponse<Entity> mypost(@Named("name") String name, @Nullable @Named("next") String cursorString) {
-
-	    Query q = new Query("Post").setFilter(new FilterPredicate("owner", FilterOperator.EQUAL, name));
-
-	    // https://cloud.google.com/appengine/docs/standard/python/datastore/projectionqueries#Indexes_for_projections
-	    //q.addProjection(new PropertyProjection("body", String.class));
-	    //q.addProjection(new PropertyProjection("date", java.util.Date.class));
-	    //q.addProjection(new PropertyProjection("likec", Integer.class));
-	    //q.addProjection(new PropertyProjection("url", String.class));
-
-	    // looks like a good idea but...
-	    // generate a DataStoreNeedIndexException -> 
-	    // require compositeIndex on owner + date
-	    // Explosion combinatoire.
-	    // q.addSort("date", SortDirection.DESCENDING);
-	    
-	    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-	    PreparedQuery pq = datastore.prepare(q);
-	    
-	    FetchOptions fetchOptions = FetchOptions.Builder.withLimit(2);
-	    
-	    if (cursorString != null) {
-		fetchOptions.startCursor(Cursor.fromWebSafeString(cursorString));
-		}
-	    
-	    QueryResultList<Entity> results = pq.asQueryResultList(fetchOptions);
-	    cursorString = results.getCursor().toWebSafeString();
-	    
-	    return CollectionResponse.<Entity>builder().setItems(results).setNextPageToken(cursorString).build();
-	    
-	}
     
-	@ApiMethod(name = "signedpetition", httpMethod = HttpMethod.GET)
-	public CollectionResponse<Entity> signedpetition(@Named("petid") String petid, @Nullable @Named("next") String cursorString) {
-
-	    Query q = new Query("D2User").setFilter(new FilterPredicate("signed", FilterOperator.EQUAL, petid));
-	    
-	    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-	    PreparedQuery pq = datastore.prepare(q);
-	    
-	    FetchOptions fetchOptions = FetchOptions.Builder.withLimit(2);
-	    
-	    if (cursorString != null) {
-			fetchOptions.startCursor(Cursor.fromWebSafeString(cursorString));
-		}
-	    
-	    QueryResultList<Entity> results = pq.asQueryResultList(fetchOptions);
-	    cursorString = results.getCursor().toWebSafeString();
-	    
-	    return CollectionResponse.<Entity>builder().setItems(results).setNextPageToken(cursorString).build();
-	}
-    
-
-	@ApiMethod(name = "getPost",
-		   httpMethod = ApiMethod.HttpMethod.GET)
-	public CollectionResponse<Entity> getPost(User user, @Nullable @Named("next") String cursorString)
-			throws UnauthorizedException {
-
-		if (user == null) {
-			throw new UnauthorizedException("Invalid credentials");
-		}
-
-		Query q = new Query("Post").
-		    setFilter(new FilterPredicate("owner", FilterOperator.EQUAL, user.getEmail()));
-
-		// Multiple projection require a composite index
-		// owner is automatically projected...
-		// q.addProjection(new PropertyProjection("body", String.class));
-		// q.addProjection(new PropertyProjection("date", java.util.Date.class));
-		// q.addProjection(new PropertyProjection("likec", Integer.class));
-		// q.addProjection(new PropertyProjection("url", String.class));
-
-		// looks like a good idea but...
-		// require a composite index
-		// - kind: Post
-		//  properties:
-		//  - name: owner
-		//  - name: date
-		//    direction: desc
-
-		// q.addSort("date", SortDirection.DESCENDING);
-
-		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-		PreparedQuery pq = datastore.prepare(q);
-
-		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(2);
-
-		if (cursorString != null) {
-			fetchOptions.startCursor(Cursor.fromWebSafeString(cursorString));
-		}
-
-		QueryResultList<Entity> results = pq.asQueryResultList(fetchOptions);
-		cursorString = results.getCursor().toWebSafeString();
-
-		return CollectionResponse.<Entity>builder().setItems(results).setNextPageToken(cursorString).build();
-	}
-
-	@ApiMethod(name = "postMsg", httpMethod = HttpMethod.POST)
-	public Entity postMsg(User user, PostMessage pm) throws UnauthorizedException {
-
-		if (user == null) {
-			throw new UnauthorizedException("Invalid credentials");
-		}
-
-		Entity e = new Entity("Post", Long.MAX_VALUE-(new Date()).getTime()+":"+user.getEmail());
-		e.setProperty("owner", user.getEmail());
-		e.setProperty("url", pm.url);
-		e.setProperty("body", pm.body);
-		e.setProperty("likec", 0);
-		e.setProperty("date", new Date());
-
-///		Solution pour pas projeter les listes
-//		Entity pi = new Entity("PostIndex", e.getKey());
-//		HashSet<String> rec=new HashSet<String>();
-//		pi.setProperty("receivers",rec);
-		
-		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-		Transaction txn = datastore.beginTransaction();
-		datastore.put(e);
-//		datastore.put(pi);
-		txn.commit();
-		return e;
-	}
+	
 }

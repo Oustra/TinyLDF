@@ -1,11 +1,15 @@
 indexes:
-- kind: Friend 
-  properties: 
-    - name: friends 
-    - name: age 
-- kind: Score
+- kind: Triplet
   properties:
-  - name: name
-  - name: score
-    direction: desc
-    
+  - name: subject
+    direction: asc
+
+- kind: Triplet
+  properties:
+  - name: predicate
+    direction: asc
+
+- kind: Triplet
+  properties:
+  - name: object
+    direction: asc
