@@ -60,11 +60,11 @@ var LDFView = {
       m('button', {
         class: 'custom-button',
         style: {
-          border: '0.7px solid black',
+          border: '1px solid #898989',
           backgroundColor: '#f6f6f6',
           padding: '4px 8px',
           cursor: 'pointer',
-          borderRadius: '5px',
+          borderRadius: '3px',
           marginRight: '10px'
         },
         onclick: function(e) {
@@ -81,11 +81,11 @@ var LDFView = {
       m('button', {
         class: 'custom-button',
         style: {
-          border: '0.7px solid black',
+          border: '1px solid #898989',
           backgroundColor: '#f6f6f6',
           padding: '4px 8px',
           cursor: 'pointer',
-          borderRadius: '5px',
+          borderRadius: '3px',
           display: Login.name === '' ? 'none' : 'inline-block'
         },
         disabled: Login.name === '',
@@ -182,7 +182,8 @@ var Triplet = {
   oninit: Triplet.loadList,
   view: function() {
     return m('div', [
-      m('div', { style: 'width:100%; font-size:19px; font-weight:bold; margin-bottom:10px; color:#333333;' }, "Matches in TinyLDF for"),
+      m('div', { style: 'font-size:19px; font-weight:bold; color:#333333;' }, "Matches in TinyLDF for"),
+      m('div', { style: 'font-size:16px; color:#898989;' }, "Showing triples 1 to 101 of ± 300,020 with 100 triples per page."),
       m('table', {class: 'table is-striped', style: "width:100%; text-align: center;"}, [
         m('thead', 
           m('tr', [
@@ -194,9 +195,9 @@ var Triplet = {
         m('tbody', 
           Triplet.list.map(function(item) {
             return m("tr", [
-              m('td', {style: "text-align: center;"}, m('label', item.properties.subject)),
-              m('td', {style: "text-align: center;"}, m('label', item.properties.predicate)),
-              m('td', {style: "text-align: center;"}, m('label', item.properties.object)),
+              m('td', {style: "text-align: center; padding:0;"}, m('label', item.properties.subject)),
+              m('td', {style: "text-align: center; padding:0;"}, m('label', item.properties.predicate)),
+              m('td', {style: "text-align: center; padding:0;"}, m('label', item.properties.object)),
             ])
           })
         ),
@@ -313,7 +314,27 @@ var Hello = {
                 style: "position: absolute; top: 80px; right: 50px; width: 145px; height: auto;"
             }),
             m("h1", {style: 'font-size:30px; font-weight:bolder; color:black; margin-bottom:10px;'}, 'TinyLDF'),
-            m("h1", {style: 'font-size:23px; font-weight:bold; color:#be1622; margin-bottom:5px;'}, 'TinyLDF'),
+            m("h1", {
+              style: `
+                font-size: 23px; 
+                font-weight: bold; 
+                color: #be1622; 
+                margin-bottom: 5px; 
+                text-decoration: none; 
+                cursor: pointer;
+                display: inline; 
+                position: relative;
+              `,
+              onmouseover: (e) => {
+                e.target.style.textDecoration = 'underline';
+              },
+              onmouseout: (e) => {
+                e.target.style.textDecoration = 'none';
+              },
+              onclick: () => {
+                window.location.href = "https://tinyldf.ey.r.appspot.com/";
+              }
+            }, 'TinyLDF'),
             m("div", {style: "margin-bottom: 20px;"}, m(LDFView)),
             m("div", {style: "margin-bottom: 20px;"}, m(TripleView)),
             m("div", [
