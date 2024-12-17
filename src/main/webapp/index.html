@@ -24,10 +24,13 @@
 
 <script>	
 
-var LDFView = {
+var LDF ={
   subject: '',
   predicate: '',
-  object: '',
+  object: ''
+}
+
+var LDFView = {
 
   view: function() {
     return m('div', [
@@ -35,24 +38,24 @@ var LDFView = {
       m('div', { style: 'margin-bottom: 10px; margin-left:27px;' }, [
         m('label', { style: 'display: inline-block; width: 80px; font-weight: bold;' }, "subject:"),
         m("input[type=text]", {
-          value: LDFView.subject,
-          oninput: function(e) { LDFView.subject = e.target.value; },
+          value: LDF.subject,
+          oninput: function(e) { LDF.subject = e.target.value; },
           style: 'width: 70%; border: none; border-bottom: 1px solid #ccc; outline: none; color: #be1622;'
         })
       ]),
       m('div', { style: 'margin-bottom: 10px; margin-left:27px;' }, [
         m('label', { style: 'display: inline-block; width: 80px; font-weight: bold;' }, "predicate:"),
         m("input[type=text]", {
-          value: LDFView.predicate,
-          oninput: function(e) { LDFView.predicate = e.target.value; },
+          value: LDF.predicate,
+          oninput: function(e) { LDF.predicate = e.target.value; },
           style: 'width: 70%; border: none; border-bottom: 1px solid #ccc; outline: none; color: #be1622;'
         })
       ]),
       m('div', { style: 'margin-bottom: 10px; margin-left:27px;' }, [
         m('label', { style: 'display: inline-block; width: 80px; font-weight: bold;' }, "object:"),
         m("input[type=text]", {
-          value: LDFView.object,
-          oninput: function(e) { LDFView.object = e.target.value; },
+          value: LDF.object,
+          oninput: function(e) { LDF.object = e.target.value; },
           style: 'width: 70%; border: none; border-bottom: 1px solid #ccc; outline: none; color: #be1622;'
         })
       ]),
@@ -68,7 +71,7 @@ var LDFView = {
           marginRight: '10px'
         },
         onclick: function(e) {
-          Triplet.search(LDFView.subject, LDFView.predicate, LDFView.object);
+          Triplet.search(LDF.subject, LDF.predicate, LDF.object);
         }
       }, m('span', {
         style: {
@@ -90,10 +93,10 @@ var LDFView = {
         },
         disabled: Login.name === '',
         onclick: function(e) {
-          Triplet.save(LDFView.subject, LDFView.predicate, LDFView.object);
-          LDFView.subject = '';
-          LDFView.predicate = '';
-          LDFView.object = '';
+          Triplet.save(LDF.subject, LDF.predicate, LDF.object);
+          LDF.subject = '';
+          LDF.predicate = '';
+          LDF.object = '';
           m.redraw();
         }
       }, m('span', {
@@ -113,6 +116,7 @@ var Triplet = {
   limit: 10,
   list: [],
   isSearching: false,
+  currentSearch: { subject: '', predicate: '', object: '' },
   noResultMessage : null,
   loadList: function() {
       return m.request({
@@ -150,14 +154,19 @@ var Triplet = {
 
   search: function(subject, predicate, object) {
     console.log("searching...", Triplet.current);
+    Triplet.isSearching = (subject !== '' || predicate !== '' || object !== '');
+    Triplet.currentSearch = { subject, predicate, object };
     
     var queryParams = [];
     if (subject) queryParams.push(`subject=${encodeURIComponent(subject)}`);
     if (predicate) queryParams.push(`predicate=${encodeURIComponent(predicate)}`);
     if (object) queryParams.push(`object=${encodeURIComponent(object)}`);
-    
-    var queryString = queryParams.length > 0 ? '?' + queryParams.join('&') : '';
-    
+    queryParams.push(`offset=${encodeURIComponent(Triplet.offset)}`);
+    queryParams.push(`limit=${encodeURIComponent(Triplet.limit)}`);
+
+    //var queryString = queryParams.length > 0 ? '?' + queryParams.join('&') : '';
+    var queryString = '?' + queryParams.join('&');
+
     return m.request({
         method: "GET",
         url: `_ah/api/myApi/v1/searchTriplet${queryString}`
@@ -166,15 +175,18 @@ var Triplet = {
       console.log("got:", result);
       if (result.items && result.items.length > 0) {
         Triplet.list = result.items;
-        Triplet.noResultMessage = null; 
+        Triplet.totalCount = result.totalCount;
+        Triplet.noResultMessage = null;
       }
       else {
         Triplet.list = [];
+        Triplet.totalCount = 0;
         Triplet.noResultMessage = "TinyLDF contains no triples that match this pattern.";
       }
       if (Triplet.list.length !== 0){
         Triplet.noResultMessage = null;
       }
+      Triplet.offset = Math.min(Triplet.offset, Math.max(0, Triplet.totalCount - Triplet.limit));
       m.redraw(true);
     })
     .catch(function(error) {
@@ -184,18 +196,45 @@ var Triplet = {
   },
 
   first: function() {
-    Triplet.offset = 0;
+  Triplet.offset = 0;
+  if (Triplet.isSearching) {
+    Triplet.search(
+      Triplet.currentSearch.subject,
+      Triplet.currentSearch.predicate,
+      Triplet.currentSearch.object
+    );
+  } else {
     Triplet.loadList();
+    }
   },
 
   previous: function() {
     Triplet.offset = Math.max(0, Triplet.offset - Triplet.limit);
-    Triplet.loadList();
+    if (Triplet.isSearching) {
+      Triplet.search(
+        Triplet.currentSearch.subject,
+        Triplet.currentSearch.predicate,
+        Triplet.currentSearch.object
+      );
+    } else {
+      Triplet.loadList();
+    }
   },
 
   next: function() {
-    Triplet.offset += Triplet.limit;
-    Triplet.loadList();
+    Triplet.offset = Math.min(
+      Triplet.offset + Triplet.limit, 
+      Math.max(0, Triplet.totalCount - Triplet.limit)
+    );
+    if (Triplet.isSearching) {
+      Triplet.search(
+        Triplet.currentSearch.subject,
+        Triplet.currentSearch.predicate,
+        Triplet.currentSearch.object
+      );
+    } else {
+      Triplet.loadList();
+    }
   }
 }
 

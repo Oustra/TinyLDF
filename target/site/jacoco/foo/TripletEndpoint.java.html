@@ -70,46 +70,51 @@ import com.google.appengine.api.datastore.Transaction;
 	}
 
 	@ApiMethod(name = &quot;searchTriplet&quot;, httpMethod = HttpMethod.GET, path = &quot;searchTriplet&quot;)
-	public List&lt;Entity&gt; searchTriplet(
+	public PaginatedResult searchTriplet(
 		@Nullable @Named(&quot;subject&quot;) String subject,
 		@Nullable @Named(&quot;predicate&quot;) String predicate,
-		@Nullable @Named(&quot;object&quot;) String object) throws UnauthorizedException {
+		@Nullable @Named(&quot;object&quot;) String object,
+		@Nullable @Named(&quot;offset&quot;) Integer offset,
+		@Nullable @Named(&quot;limit&quot;) Integer limit
+		) throws UnauthorizedException {
 		
-<span class="nc" id="L78">		Query q = new Query(&quot;Triplet&quot;);</span>
+<span class="nc" id="L81">		Query q = new Query(&quot;Triplet&quot;);</span>
 		
-<span class="nc bnc" id="L80" title="All 4 branches missed.">		if (subject != null &amp;&amp; !subject.isEmpty()) {</span>
-<span class="nc" id="L81">			q.setFilter(new FilterPredicate(&quot;subject&quot;, FilterOperator.EQUAL, subject));</span>
+<span class="nc bnc" id="L83" title="All 4 branches missed.">		if (subject != null &amp;&amp; !subject.isEmpty()) {</span>
+<span class="nc" id="L84">			q.setFilter(new FilterPredicate(&quot;subject&quot;, FilterOperator.EQUAL, subject));</span>
 		}
 		
-<span class="nc bnc" id="L84" title="All 4 branches missed.">		if (predicate != null &amp;&amp; !predicate.isEmpty()) {</span>
-<span class="nc" id="L85">			q.setFilter(new FilterPredicate(&quot;predicate&quot;, FilterOperator.EQUAL, predicate));</span>
+<span class="nc bnc" id="L87" title="All 4 branches missed.">		if (predicate != null &amp;&amp; !predicate.isEmpty()) {</span>
+<span class="nc" id="L88">			q.setFilter(new FilterPredicate(&quot;predicate&quot;, FilterOperator.EQUAL, predicate));</span>
 		}
 		
-<span class="nc bnc" id="L88" title="All 4 branches missed.">		if (object != null &amp;&amp; !object.isEmpty()) {</span>
-<span class="nc" id="L89">			q.setFilter(new FilterPredicate(&quot;object&quot;, FilterOperator.EQUAL, object));</span>
+<span class="nc bnc" id="L91" title="All 4 branches missed.">		if (object != null &amp;&amp; !object.isEmpty()) {</span>
+<span class="nc" id="L92">			q.setFilter(new FilterPredicate(&quot;object&quot;, FilterOperator.EQUAL, object));</span>
 		}
 		
-<span class="nc" id="L92">		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();</span>
-<span class="nc" id="L93">		PreparedQuery pq = datastore.prepare(q);</span>
-<span class="nc" id="L94">		List&lt;Entity&gt; result = pq.asList(FetchOptions.Builder.withLimit(100));</span>
-<span class="nc" id="L95">		return result;</span>
+<span class="nc" id="L95">		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();</span>
+<span class="nc" id="L96">		PreparedQuery pq = datastore.prepare(q);</span>
+
+<span class="nc" id="L98">		int totalCount = pq.countEntities(FetchOptions.Builder.withDefaults());</span>
+<span class="nc" id="L99">		List&lt;Entity&gt; result = pq.asList(FetchOptions.Builder.withLimit(100));</span>
+<span class="nc" id="L100">		return new PaginatedResult(result, totalCount);</span>
 	}
 
 	@ApiMethod(name = &quot;addTriplet&quot;, httpMethod = HttpMethod.GET)
 	public Entity addTriplet(User user, @Named(&quot;subject&quot;) String subject, @Named(&quot;predicate&quot;) String predicate, @Named(&quot;object&quot;) String object) throws UnauthorizedException {
-<span class="nc" id="L100">		System.out.println(&quot;The User is : &quot; +user);</span>
-<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (user == null) {</span>
-<span class="nc" id="L102">			throw new UnauthorizedException(&quot;Invalid credentials&quot;);</span>
+<span class="nc" id="L105">		System.out.println(&quot;The User is : &quot; +user);</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		if (user == null) {</span>
+<span class="nc" id="L107">			throw new UnauthorizedException(&quot;Invalid credentials&quot;);</span>
 		}
-<span class="nc" id="L104">		Entity e = new Entity(&quot;Triplet&quot;, &quot;&quot; + subject + predicate + object);</span>
-<span class="nc" id="L105">		e.setProperty(&quot;subject&quot;, subject);</span>
-<span class="nc" id="L106">		e.setProperty(&quot;predicate&quot;, predicate);</span>
-<span class="nc" id="L107">		e.setProperty(&quot;object&quot;, object);</span>
+<span class="nc" id="L109">		Entity e = new Entity(&quot;Triplet&quot;, &quot;&quot; + subject + predicate + object);</span>
+<span class="nc" id="L110">		e.setProperty(&quot;subject&quot;, subject);</span>
+<span class="nc" id="L111">		e.setProperty(&quot;predicate&quot;, predicate);</span>
+<span class="nc" id="L112">		e.setProperty(&quot;object&quot;, object);</span>
 
-<span class="nc" id="L109">		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();</span>
-<span class="nc" id="L110">		datastore.put(e);</span>
+<span class="nc" id="L114">		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();</span>
+<span class="nc" id="L115">		datastore.put(e);</span>
 
-<span class="nc" id="L112">		return e;</span>
+<span class="nc" id="L117">		return e;</span>
 	}
    	
 }

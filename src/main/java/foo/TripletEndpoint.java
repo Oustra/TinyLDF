@@ -70,10 +70,13 @@ public class TripletEndpoint {
 	}
 
 	@ApiMethod(name = "searchTriplet", httpMethod = HttpMethod.GET, path = "searchTriplet")
-	public List<Entity> searchTriplet(
+	public PaginatedResult searchTriplet(
 		@Nullable @Named("subject") String subject,
 		@Nullable @Named("predicate") String predicate,
-		@Nullable @Named("object") String object) throws UnauthorizedException {
+		@Nullable @Named("object") String object,
+		@Nullable @Named("offset") Integer offset,
+		@Nullable @Named("limit") Integer limit
+		) throws UnauthorizedException {
 		
 		Query q = new Query("Triplet");
 		
@@ -91,8 +94,10 @@ public class TripletEndpoint {
 		
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 		PreparedQuery pq = datastore.prepare(q);
+
+		int totalCount = pq.countEntities(FetchOptions.Builder.withDefaults());
 		List<Entity> result = pq.asList(FetchOptions.Builder.withLimit(100));
-		return result;
+		return new PaginatedResult(result, totalCount);
 	}
 
 	@ApiMethod(name = "addTriplet", httpMethod = HttpMethod.GET)
