@@ -55,13 +55,18 @@ import com.google.appengine.api.datastore.Transaction;
 public class TripletEndpoint {
 
 	@ApiMethod(name = "showTriplets", httpMethod = HttpMethod.GET)
-	public List<Entity> showTriplets() {
+	public PaginatedResult showTriplets(@Nullable @Named("offset") Integer offset, @Nullable @Named("limit") Integer limit) {
+		if (offset == null) offset = 0;
+		if (limit == null) limit = 100;
+	
 		Query q = new Query("Triplet");
-
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 		PreparedQuery pq = datastore.prepare(q);
-		List<Entity> result = pq.asList(FetchOptions.Builder.withLimit(100));
-		return result;
+
+		int totalCount = pq.countEntities(FetchOptions.Builder.withDefaults());
+		List<Entity> result = pq.asList(FetchOptions.Builder.withOffset(offset).limit(limit));
+	
+		return new PaginatedResult(result, totalCount);
 	}
 
 	@ApiMethod(name = "searchTriplet", httpMethod = HttpMethod.GET, path = "searchTriplet")

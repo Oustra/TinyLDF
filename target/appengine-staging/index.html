@@ -108,77 +108,144 @@ var LDFView = {
 };
 
 var Triplet = {
-	    list: [],
-      noResultMessage : null,
-	    loadList: function() {
-	        return m.request({
-	            method: "GET",
-              url: "_ah/api/myApi/v1/showTriplets/"
-	        })
-	        .then(function(result) {
-            Triplet.list = result.items
-	        	console.log("got:",result.items)
-	        	// m.redraw(true)
-	        })
-	    },
-	    save: function(subject, predicate, object) {
-	    	console.log("saving...",Triplet.current)
-        if (!subject || !predicate || !object) {
-          alert("Please fill in all fields (subject, predicate, object).");
-          return;
-        }
+  offset: 0,
+  totalCount: 0,
+  limit: 10,
+  list: [],
+  isSearching: false,
+  noResultMessage : null,
+  loadList: function() {
+      return m.request({
+          method: "GET",
+          url: `_ah/api/myApi/v1/showTriplets?offset=${Triplet.offset}&limit=${Triplet.limit}`
+      })
+      .then(function(result) {
+        Triplet.list = result.items
+        Triplet.totalCount = result.totalCount
+        console.log("got:",result.items)
+        // m.redraw(true)
+      })
+  },
 
-        return m.request({
-            method: "GET",
-            url: `_ah/api/myApi/v1/addTriplet/${subject}/${predicate}/${object}`+'?access_token=' + Login.token
-        })
-        .then(function(result) {
-          console.log("got:",result)
-          Triplet.loadList()
-        })
-        .catch(function(error) {
-          console.error("Error saving triplet:", error);
-          alert("Error saving triplet hhhh, please try again!");
-        })
-	    },
+  save: function(subject, predicate, object) {
+    console.log("saving...",Triplet.current)
+    if (!subject || !predicate || !object) {
+      alert("Please fill in all fields (subject, predicate, object).");
+      return;
+    }
 
-      search: function(subject, predicate, object) {
-        console.log("searching...", Triplet.current);
-        
-        var queryParams = [];
-        if (subject) queryParams.push(`subject=${encodeURIComponent(subject)}`);
-        if (predicate) queryParams.push(`predicate=${encodeURIComponent(predicate)}`);
-        if (object) queryParams.push(`object=${encodeURIComponent(object)}`);
-        
-        var queryString = queryParams.length > 0 ? '?' + queryParams.join('&') : '';
-        
-        return m.request({
-            method: "GET",
-            url: `_ah/api/myApi/v1/searchTriplet${queryString}`
-        })
-        .then(function(result) {
-          console.log("got:", result);
-          if (result.items && result.items.length > 0) {
-            Triplet.list = result.items;
-            Triplet.noResultMessage = null; 
-          }
-          else {
-            Triplet.list = [];
-            Triplet.noResultMessage = "TinyLDF contains no triples that match this pattern.";
-          }
-          if (Triplet.list.length !== 0){
-            Triplet.noResultMessage = null;
-          }
-          m.redraw(true);
-        })
-        .catch(function(error) {
-            console.error("Error searching triplet:", error);
-            alert("Error searching for triplet XD, please try again!");
-        });
+    return m.request({
+        method: "GET",
+        url: `_ah/api/myApi/v1/addTriplet/${subject}/${predicate}/${object}`+'?access_token=' + Login.token
+    })
+    .then(function(result) {
+      console.log("got:",result)
+      Triplet.loadList()
+    })
+    .catch(function(error) {
+      console.error("Error saving triplet:", error);
+      alert("Error saving triplet hhhh, please try again!");
+    })
+  },
+
+  search: function(subject, predicate, object) {
+    console.log("searching...", Triplet.current);
+    
+    var queryParams = [];
+    if (subject) queryParams.push(`subject=${encodeURIComponent(subject)}`);
+    if (predicate) queryParams.push(`predicate=${encodeURIComponent(predicate)}`);
+    if (object) queryParams.push(`object=${encodeURIComponent(object)}`);
+    
+    var queryString = queryParams.length > 0 ? '?' + queryParams.join('&') : '';
+    
+    return m.request({
+        method: "GET",
+        url: `_ah/api/myApi/v1/searchTriplet${queryString}`
+    })
+    .then(function(result) {
+      console.log("got:", result);
+      if (result.items && result.items.length > 0) {
+        Triplet.list = result.items;
+        Triplet.noResultMessage = null; 
       }
-	}
+      else {
+        Triplet.list = [];
+        Triplet.noResultMessage = "TinyLDF contains no triples that match this pattern.";
+      }
+      if (Triplet.list.length !== 0){
+        Triplet.noResultMessage = null;
+      }
+      m.redraw(true);
+    })
+    .catch(function(error) {
+        console.error("Error searching triplet:", error);
+        alert("Error searching for triplet XD, please try again!");
+    });
+  },
 
-  var TripleView = {
+  first: function() {
+    Triplet.offset = 0;
+    Triplet.loadList();
+  },
+
+  previous: function() {
+    Triplet.offset = Math.max(0, Triplet.offset - Triplet.limit);
+    Triplet.loadList();
+  },
+
+  next: function() {
+    Triplet.offset += Triplet.limit;
+    Triplet.loadList();
+  }
+}
+
+
+var TripleView = {
+  oninit: Triplet.loadList,
+  view: function() {
+    return m('div', [
+      m('div', { style: 'font-size:19px; font-weight:bold; color:#333333;' }, "Matches in TinyLDF for"),
+      m('div', { style: 'font-size:16px; color:#898989; display: flex; align-items: center;' }, [
+        m('span', `Showing triples ${Triplet.offset + 1} to ${Math.min(Triplet.offset + Triplet.limit, Triplet.totalCount)} of ${Triplet.totalCount} with ${Triplet.limit} triples per page.`),
+        m('div', { style: 'margin-left: 15px;' }, [
+          Triplet.offset > 0 ? m('button', {
+            style: 'margin: 0 5px; font-weight: bold; padding: 5px 15px; background-color: white; color: #be1622; font-size: 17px; cursor: pointer; border: none;',
+            onclick: Triplet.first
+          }, 'first') : null,
+          Triplet.offset > 0 ? m('button', {
+            style: 'margin: 0 5px; font-weight: bold; padding: 5px 15px; background-color: white; color: #be1622; font-size: 17px; cursor: pointer; border: none;',
+            onclick: Triplet.previous
+          }, 'previous') : null,
+          Triplet.offset + Triplet.limit < Triplet.totalCount ? m('button', {
+            style: 'margin: 0 5px; font-weight: bold; padding: 5px 15px; background-color: white; color: #be1622; font-size: 17px; cursor: pointer; border: none;',
+            onclick: Triplet.next
+          }, 'next') : null
+        ])
+      ]),
+      Triplet.list.length > 0 ? m('table', {class: 'table is-striped', style: "width:100%; text-align: center;"}, [
+        m('thead', 
+          m('tr', [
+            m('th', {style: "width:33%; text-align: center;"}, "Subject"),
+            m('th', {style: "width:33%; text-align: center;"}, "Predicate"),
+            m('th', {style: "width:33%; text-align: center;"}, "Object"),
+          ])
+        ),
+        m('tbody', 
+          Triplet.list.map(function(item) {
+            return m("tr", [
+              m('td', {style: "text-align: center; padding:0;"}, m('label', item.properties.subject)),
+              m('td', {style: "text-align: center; padding:0;"}, m('label', item.properties.predicate)),
+              m('td', {style: "text-align: center; padding:0;"}, m('label', item.properties.object)),
+            ]);
+          })
+        ),
+      ]) : null,
+      m('div', { style: 'margin-top: 10px; color: #BEBEBE;' }, Triplet.noResultMessage)
+    ]);
+  }
+};
+
+var TripleView2 = {
   oninit: Triplet.loadList,
   view: function() {
     return m('div', [
@@ -235,24 +302,6 @@ var Login = {
     Login.loggedIn= true
     m.redraw()
   }
-}
-
-var LoginView2 = {
-    view: function() {
- 	    return m('div', {class:'container'}, [
-      m("h1", {style: 'font-size:19px; font-weight:bold;margin-bottom:10px; color:#333333;'}, 'Login'),
-      m("div", {
-      	   "id":"g_id_onload",
-      	   "data-client_id":"418717520776-vd1hi1ukmn4494md8h75odm29dn05n8i.apps.googleusercontent.com",
-           "data-callback": "handleCredentialResponse"}),
-      m("div", {
-      	   "class":"g_id_signin",
-      	   "data-type":"standard"}),
-      m("li", {style: 'margin-left:27px; font-weight:bold; margin-bottom:12px;'}, "name: "+Login.name),
-      m("li", {style: 'margin-left:27px; font-weight:bold; margin-bottom:12px;'}, "email: "+Login.email),
-      //m("img",{"src":Login.url}),
-      ])
-    }
 }
 
 var LoginView = {
