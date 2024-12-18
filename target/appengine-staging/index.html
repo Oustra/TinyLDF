@@ -31,7 +31,6 @@ var LDF ={
 }
 
 var LDFView = {
-
   view: function() {
     return m('div', [
       m('div', { style: 'font-size:19px; font-weight:bold;margin-bottom:12px; color:#333333;' }, "Query TinyLDF by triple pattern"),
@@ -40,7 +39,7 @@ var LDFView = {
         m("input[type=text]", {
           value: LDF.subject,
           oninput: function(e) { LDF.subject = e.target.value; },
-          style: 'width: 70%; border: none; border-bottom: 1px solid #ccc; outline: none; color: #be1622;'
+          style: 'width: 70%; border: none; border-bottom: 1px solid #ccc; outline: none; color: #be1622; font-size:15px;'
         })
       ]),
       m('div', { style: 'margin-bottom: 10px; margin-left:27px;' }, [
@@ -48,7 +47,7 @@ var LDFView = {
         m("input[type=text]", {
           value: LDF.predicate,
           oninput: function(e) { LDF.predicate = e.target.value; },
-          style: 'width: 70%; border: none; border-bottom: 1px solid #ccc; outline: none; color: #be1622;'
+          style: 'width: 70%; border: none; border-bottom: 1px solid #ccc; outline: none; color: #be1622; font-size:15px;'
         })
       ]),
       m('div', { style: 'margin-bottom: 10px; margin-left:27px;' }, [
@@ -56,7 +55,7 @@ var LDFView = {
         m("input[type=text]", {
           value: LDF.object,
           oninput: function(e) { LDF.object = e.target.value; },
-          style: 'width: 70%; border: none; border-bottom: 1px solid #ccc; outline: none; color: #be1622;'
+          style: 'width: 70%; border: none; border-bottom: 1px solid #ccc; outline: none; color: #be1622; font-size:15px;'
         })
       ]),
      
@@ -113,7 +112,7 @@ var LDFView = {
 var Triplet = {
   offset: 0,
   totalCount: 0,
-  limit: 10,
+  limit: 100,
   list: [],
   isSearching: false,
   currentSearch: { subject: '', predicate: '', object: '' },
@@ -261,20 +260,53 @@ var TripleView = {
           }, 'next') : null
         ])
       ]),
-      Triplet.list.length > 0 ? m('table', {class: 'table is-striped', style: "width:100%; text-align: center;"}, [
+      Triplet.list.length > 0 ? m('table', {class: 'table is-striped', style: "max-width:100%; text-align: center; table-layout: fixed; word-break: break-word;"}, [
         m('thead', 
           m('tr', [
-            m('th', {style: "width:33%; text-align: center;"}, "Subject"),
-            m('th', {style: "width:33%; text-align: center;"}, "Predicate"),
-            m('th', {style: "width:33%; text-align: center;"}, "Object"),
+            m('th', {style: "width:15%; text-align: center;"}, "Subject"),
+            m('th', {style: "width:25%; text-align: center;"}, "Predicate"),
+            m('th', {style: "width:60%; text-align: center;"}, "Object"),
           ])
         ),
         m('tbody', 
           Triplet.list.map(function(item) {
+            // Function to extract the last part of the URL
+            const getLastPart = (url) => url.split('/').pop();
+
             return m("tr", [
-              m('td', {style: "text-align: center; padding:0;"}, m('label', item.properties.subject)),
-              m('td', {style: "text-align: center; padding:0;"}, m('label', item.properties.predicate)),
-              m('td', {style: "text-align: center; padding:0;"}, m('label', item.properties.object)),
+              m('td', { 
+                  style: "text-align: center; padding: 0; cursor: pointer;", 
+                  onclick: () =>{
+                    LDF.subject = item.properties.subject;
+                    LDF.predicate = '';
+                    LDF.object = '';
+                    Triplet.search(item.properties.subject, '', '');
+                   }
+                }, 
+                getLastPart(item.properties.subject)
+              ),
+              m('td', { 
+                  style: "text-align: center; padding: 0; cursor: pointer;", 
+                  onclick: () => { 
+                    LDF.subject = '';
+                    LDF.predicate = item.properties.predicate;
+                    LDF.object = '';
+                    Triplet.search('', item.properties.predicate, '');
+                   }
+                }, 
+                getLastPart(item.properties.predicate)
+              ),
+              m('td', { 
+                  style: "text-align: center; padding: 0; cursor: pointer;", 
+                  onclick: () => {
+                    LDF.subject = '';
+                    LDF.predicate = '';
+                    LDF.object = item.properties.object;
+                    Triplet.search('', '', item.properties.object);
+                  }
+                }, 
+                item.properties.object
+              ),
             ]);
           })
         ),
@@ -284,34 +316,6 @@ var TripleView = {
   }
 };
 
-var TripleView2 = {
-  oninit: Triplet.loadList,
-  view: function() {
-    return m('div', [
-      m('div', { style: 'font-size:19px; font-weight:bold; color:#333333;' }, "Matches in TinyLDF for"),
-      m('div', { style: 'font-size:16px; color:#898989;' }, "Showing triples 1 to 101 of ± 300,020 with 100 triples per page."),
-      m('table', {class: 'table is-striped', style: "width:100%; text-align: center;"}, [
-        m('thead', 
-          m('tr', [
-            m('th', {style: "width:33%; text-align: center;"}, "Subject"),
-            m('th', {style: "width:33%; text-align: center;"}, "Predicate"),
-            m('th', {style: "width:33%; text-align: center;"}, "Object"),
-          ])
-        ),
-        m('tbody', 
-          Triplet.list.map(function(item) {
-            return m("tr", [
-              m('td', {style: "text-align: center; padding:0;"}, m('label', item.properties.subject)),
-              m('td', {style: "text-align: center; padding:0;"}, m('label', item.properties.predicate)),
-              m('td', {style: "text-align: center; padding:0;"}, m('label', item.properties.object)),
-            ])
-          })
-        ),
-      ]),
-      m('div', { style: 'margin-top: 10px; color: #BEBEBE;' }, Triplet.noResultMessage)
-    ])
-  }
-}
 
 var Login = {
   name:"",
