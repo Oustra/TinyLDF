@@ -96,7 +96,7 @@ import com.google.appengine.api.datastore.Transaction;
 <span class="nc" id="L96">		PreparedQuery pq = datastore.prepare(q);</span>
 
 <span class="nc" id="L98">		int totalCount = pq.countEntities(FetchOptions.Builder.withDefaults());</span>
-<span class="nc" id="L99">		List&lt;Entity&gt; result = pq.asList(FetchOptions.Builder.withLimit(100));</span>
+<span class="nc" id="L99">		List&lt;Entity&gt; result = pq.asList(FetchOptions.Builder.withOffset(offset).limit(limit));</span>
 <span class="nc" id="L100">		return new PaginatedResult(result, totalCount);</span>
 	}
 

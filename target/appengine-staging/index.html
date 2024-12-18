@@ -155,7 +155,13 @@ var Triplet = {
     console.log("searching...", Triplet.current);
     Triplet.isSearching = (subject !== '' || predicate !== '' || object !== '');
     Triplet.currentSearch = { subject, predicate, object };
-    
+    if (Triplet.isSearching){
+      LDF.subject = Triplet.currentSearch.subject;
+      LDF.predicate = Triplet.currentSearch.predicate;
+      LDF.object = Triplet.currentSearch.object;
+    }
+    Triplet.offset = Math.min(Triplet.offset, Math.max(0, Triplet.totalCount - Triplet.limit));
+    console.log("Offset: ",Triplet.offset);
     var queryParams = [];
     if (subject) queryParams.push(`subject=${encodeURIComponent(subject)}`);
     if (predicate) queryParams.push(`predicate=${encodeURIComponent(predicate)}`);
@@ -163,7 +169,6 @@ var Triplet = {
     queryParams.push(`offset=${encodeURIComponent(Triplet.offset)}`);
     queryParams.push(`limit=${encodeURIComponent(Triplet.limit)}`);
 
-    //var queryString = queryParams.length > 0 ? '?' + queryParams.join('&') : '';
     var queryString = '?' + queryParams.join('&');
 
     return m.request({
@@ -185,7 +190,7 @@ var Triplet = {
       if (Triplet.list.length !== 0){
         Triplet.noResultMessage = null;
       }
-      Triplet.offset = Math.min(Triplet.offset, Math.max(0, Triplet.totalCount - Triplet.limit));
+      
       m.redraw(true);
     })
     .catch(function(error) {
@@ -260,53 +265,72 @@ var TripleView = {
           }, 'next') : null
         ])
       ]),
-      Triplet.list.length > 0 ? m('table', {class: 'table is-striped', style: "max-width:100%; text-align: center; table-layout: fixed; word-break: break-word;"}, [
-        m('thead', 
-          m('tr', [
-            m('th', {style: "width:15%; text-align: center;"}, "Subject"),
-            m('th', {style: "width:25%; text-align: center;"}, "Predicate"),
-            m('th', {style: "width:60%; text-align: center;"}, "Object"),
-          ])
-        ),
+      Triplet.list.length > 0 ? m('table', {
+        class: 'table is-striped',
+        style: "max-width:100%; text-align: center; table-layout: fixed; border-collapse: collapse; background-color: white; border: none;"
+      }, [
         m('tbody', 
           Triplet.list.map(function(item) {
             // Function to extract the last part of the URL
-            const getLastPart = (url) => url.split('/').pop();
+            const getLastPart = (url) => url.split('/').pop().split('#').pop().split('?')[0];
 
             return m("tr", [
               m('td', { 
-                  style: "text-align: center; padding: 0; cursor: pointer;", 
-                  onclick: () =>{
-                    LDF.subject = item.properties.subject;
-                    LDF.predicate = '';
-                    LDF.object = '';
-                    Triplet.search(item.properties.subject, '', '');
-                   }
-                }, 
-                getLastPart(item.properties.subject)
-              ),
+                style: "padding: 0 10px; cursor: pointer; border: none; background-color: white; color: black;", 
+                onmouseover: (e) => {
+                  e.target.style.color = "#be1622";
+                  e.target.style.textDecoration = "underline";
+                  e.target.style.textDecorationColor = "#be1622";
+                },
+                onmouseout: (e) => {
+                  e.target.style.color = "black";
+                  e.target.style.textDecoration = "none";
+                },
+                onclick: () => {
+                  LDF.subject = item.properties.subject;
+                  LDF.predicate = '';
+                  LDF.object = '';
+                  Triplet.search(item.properties.subject, '', '');
+                }
+              }, getLastPart(item.properties.subject)),
+
               m('td', { 
-                  style: "text-align: center; padding: 0; cursor: pointer;", 
-                  onclick: () => { 
-                    LDF.subject = '';
-                    LDF.predicate = item.properties.predicate;
-                    LDF.object = '';
-                    Triplet.search('', item.properties.predicate, '');
-                   }
-                }, 
-                getLastPart(item.properties.predicate)
-              ),
+                style: "padding: 0 10px; cursor: pointer; border: none; background-color: white; color: black;", 
+                onmouseover: (e) => {
+                  e.target.style.color = "#be1622";
+                  e.target.style.textDecoration = "underline";
+                  e.target.style.textDecorationColor = "#be1622";
+                },
+                onmouseout: (e) => {
+                  e.target.style.color = "black";
+                  e.target.style.textDecoration = "none";
+                },
+                onclick: () => { 
+                  LDF.subject = '';
+                  LDF.predicate = item.properties.predicate;
+                  LDF.object = '';
+                  Triplet.search('', item.properties.predicate, '');
+                }
+              }, getLastPart(item.properties.predicate)),
+
               m('td', { 
-                  style: "text-align: center; padding: 0; cursor: pointer;", 
-                  onclick: () => {
-                    LDF.subject = '';
-                    LDF.predicate = '';
-                    LDF.object = item.properties.object;
-                    Triplet.search('', '', item.properties.object);
-                  }
-                }, 
-                item.properties.object
-              ),
+                style: "padding: 0 10px; cursor: pointer; border: none; background-color: white; color: black;", 
+                onmouseover: (e) => {
+                  e.target.style.color = "#be1622";
+                  e.target.style.textDecoration = "underline";
+                  e.target.style.textDecorationColor = "#be1622";
+                },
+                onmouseout: (e) => {
+                  e.target.style.color = "black";
+                  e.target.style.textDecoration = "none";
+                },
+                onclick: () => {
+                  LDF.subject = '';
+                  LDF.predicate = '';
+                  LDF.object = item.properties.object;
+                  Triplet.search('', '', item.properties.object);
+                }
+              }, item.properties.object),
             ]);
           })
         ),

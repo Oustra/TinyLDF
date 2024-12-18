@@ -96,7 +96,7 @@ public class TripletEndpoint {
 		PreparedQuery pq = datastore.prepare(q);
 
 		int totalCount = pq.countEntities(FetchOptions.Builder.withDefaults());
-		List<Entity> result = pq.asList(FetchOptions.Builder.withLimit(100));
+		List<Entity> result = pq.asList(FetchOptions.Builder.withOffset(offset).limit(limit));
 		return new PaginatedResult(result, totalCount);
 	}
 
