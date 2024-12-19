@@ -110,6 +110,7 @@ var LDFView = {
 };
 
 var Triplet = {
+  time: 0,
   offset: 0,
   totalCount: 0,
   limit: 100,
@@ -127,6 +128,7 @@ var Triplet = {
         const endTime = new Date();
         const executionTime = (endTime - startTime) / 1000;
         console.log(`=> Query (showTriplet) execution time: ${executionTime} s`);
+        Triplet.time = executionTime;
         Triplet.list = result.items
         Triplet.totalCount = result.totalCount
         //console.log("got:",result.items)
@@ -184,6 +186,7 @@ var Triplet = {
       const endTime = new Date();
       const executionTime = (endTime - startTime) / 1000;
       console.log(`=> Query (searchTriplet) execution time: ${executionTime} s`);
+      Triplet.time = executionTime;
       //console.log("got:", result);
       if (result.items && result.items.length > 0) {
         Triplet.list = result.items;
@@ -255,12 +258,12 @@ var TripleView = {
   oninit: Triplet.loadList,
   view: function() {
     return m('div', [
-      m('div', { style: 'font-size:19px; font-weight:bold; color:#333333;' }, "Matches in TinyLDF for"),
+      m('div', { style: 'font-size:19px; font-weight:bold; color:#333333;' }, `Matches in TinyLDF for : (${Triplet.time}s)`),
       m('div', { style: 'font-size:16px; color:#898989; display: flex; align-items: center;' }, [
         m('span', `Showing triples ${Triplet.offset + 1} to ${Math.min(Triplet.offset + Triplet.limit, Triplet.totalCount)} of ± ${Triplet.totalCount} with ${Triplet.limit} triples per page.`),
         m('div', { style: 'margin-left: 15px;' }, [
           Triplet.offset > 0 ? m('button', {
-            style: 'margin: 0 5px; font-weight: bold; padding: 5px 15px; background-color: white; color: #be1622; font-size: 17px; cursor: pointer; border: none;',
+            style: 'margin: 0 5px; font-weight: bold; padding: 5px 15px; background-color: white; color: #be1622; font-size: 17px; cursor: pointer; border: none; ',
             onclick: Triplet.first
           }, 'first') : null,
           Triplet.offset > 0 ? m('button', {
