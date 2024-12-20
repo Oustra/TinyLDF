@@ -11,3 +11,7 @@ indexes:
   properties:
   - name: "object"
     direction: asc
+- kind: "Triplet"
+  properties:
+  - name: "Graph"
+    direction: asc

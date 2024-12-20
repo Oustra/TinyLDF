@@ -4,6 +4,14 @@ TinyLDF is a lightweight Linked Data Fragments platform that allows users to per
 
 ---
 
+# Group Members
+   - FENNASSI Oussama
+   - MOTTET Valentin
+   - OULBOUB Safaa
+   - EL HMIDI Yasmina
+
+---
+
 ## Features
 
 ### Core Functionalities
