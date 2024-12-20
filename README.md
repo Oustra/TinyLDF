@@ -25,7 +25,31 @@ TinyLDF is a lightweight Linked Data Fragments platform that allows users to per
    - Authenticated users can add new quads (`subject`, `predicate`, `object`, `graph`) to the datastore.
 
 3. **Performance Insights**
-   - Each API call displays the query execution time for improved user transparency.
+ 
+   The Performance Insights page provides valuable metrics for analyzing the efficiency of API queries. Access it here:
+
+   **[Performance Insights Page](https://tinyldf.ey.r.appspot.com/performance.html)**
+
+   #### **Key Features**
+   - **Execution Time Monitoring**:  
+   Each API call displays the execution time for retrieving results, allowing users to track performance transparently.
+
+   - **Standard Deviation Reporting**:  
+   The system calculates the **average execution time** and the **standard deviation** for query response times:
+   - **Average (Mean)**: Provides the overall performance metric.
+   - **Standard Deviation**: Indicates the consistency and variability in execution times.
+
+   - **Detailed Query Results**:  
+   A list of query execution times is displayed, showing:
+   - Query Index (e.g., Query 1, Query 2).
+   - Execution time in milliseconds (or `"Failed"` if the query was unsuccessful).
+
+   - **Run Performance Tests**:
+   A button labeled `Run Performance Test` allows users to execute a predefined set of API queries to gather live performance data.
+
+   #### **How It Works**
+   1. A series of predefined queries are sent to the API, covering various parameters and use cases.
+   2. Each query’s execution time is recorded, and the results are displayed in a detailed list.
 
 ---
 
