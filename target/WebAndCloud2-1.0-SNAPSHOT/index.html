@@ -34,7 +34,7 @@ var LDF ={
 var LDFView = {
   view: function() {
     return m('div', [
-      m('div', { style: 'font-size:19px; font-weight:bold;margin-bottom:12px; color:#333333;' }, "Query TinyLDF by triple pattern"),
+      m('div', { style: 'font-size:19px; font-weight:bold;margin-bottom:12px; color:#333333;' }, "Query TinyLDF by Quad pattern"),
       m('div', { style: 'margin-bottom: 10px; margin-left:27px;' }, [
         m('label', { style: 'display: inline-block; width: 80px; font-weight: bold;' }, "subject:"),
         m("input[type=text]", {
@@ -87,7 +87,7 @@ var LDFView = {
           fontWeight: 'bold',
           fontSize: '15px'
         }
-      }, "Find matching triples")),
+      }, "Find matching Quads")),
 
       m('button', {
         class: 'custom-button',
@@ -114,7 +114,7 @@ var LDFView = {
           fontWeight: 'bold',
           fontSize: '15px'
         }
-      }, "Add triples")),
+      }, "Add Quad")),
     ]);
   }
 };
@@ -275,7 +275,7 @@ var TripleView = {
     return m('div', [
       m('div', { style: 'font-size:19px; font-weight:bold; color:#333333;' }, `Matches in TinyLDF for : (${Triplet.time}s)`),
       m('div', { style: 'font-size:16px; color:#898989; display: flex; align-items: center;' }, [
-        m('span', `Showing triples ${Triplet.offset + 1} to ${Math.min(Triplet.offset + Triplet.limit, Triplet.totalCount)} of ± ${Triplet.totalCount} with ${Triplet.limit} triples per page.`),
+        m('span', `Showing Quads ${Triplet.offset + 1} to ${Math.min(Triplet.offset + Triplet.limit, Triplet.totalCount)} of ± ${Triplet.totalCount} with ${Triplet.limit} Quads per page.`),
         m('div', { style: 'margin-left: 15px;' }, [
           Triplet.offset > 0 ? m('button', {
             style: 'margin: 0 5px; font-weight: bold; padding: 5px 15px; background-color: white; color: #be1622; font-size: 17px; cursor: pointer; border: none; ',
