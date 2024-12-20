@@ -38,6 +38,11 @@ import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.appengine.api.datastore.QueryResultList;
 import com.google.appengine.api.datastore.Transaction;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Api(name = "myApi",
      version = "v1",
      audiences = "418717520776-vd1hi1ukmn4494md8h75odm29dn05n8i.apps.googleusercontent.com",
@@ -74,6 +79,7 @@ public class TripletEndpoint {
 		@Nullable @Named("subject") String subject,
 		@Nullable @Named("predicate") String predicate,
 		@Nullable @Named("object") String object,
+		@Nullable @Named("Graph") String Graph,
 		@Nullable @Named("offset") Integer offset,
 		@Nullable @Named("limit") Integer limit
 		) throws UnauthorizedException {
@@ -92,6 +98,10 @@ public class TripletEndpoint {
 			q.setFilter(new FilterPredicate("object", FilterOperator.EQUAL, object));
 		}
 		
+		if (Graph != null && !Graph.isEmpty()) {
+			q.setFilter(new FilterPredicate("Graph", FilterOperator.EQUAL, Graph));
+		}
+
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 		PreparedQuery pq = datastore.prepare(q);
 
@@ -101,20 +111,21 @@ public class TripletEndpoint {
 	}
 
 	@ApiMethod(name = "addTriplet", httpMethod = HttpMethod.GET)
-	public Entity addTriplet(User user, @Named("subject") String subject, @Named("predicate") String predicate, @Named("object") String object) throws UnauthorizedException {
+	public Entity addTriplet(User user, @Named("subject") String subject, @Named("predicate") String predicate, @Named("object") String object, @Named("Graph") String Graph) throws UnauthorizedException {
 		System.out.println("The User is : " +user);
 		if (user == null) {
 			throw new UnauthorizedException("Invalid credentials");
 		}
-		Entity e = new Entity("Triplet", "" + subject + predicate + object);
+		Entity e = new Entity("Triplet", "" + subject + predicate + object + Graph);
 		e.setProperty("subject", subject);
 		e.setProperty("predicate", predicate);
 		e.setProperty("object", object);
+		e.setProperty("Graph", Graph);
 
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 		datastore.put(e);
 
 		return e;
 	}
-   	
+
 }

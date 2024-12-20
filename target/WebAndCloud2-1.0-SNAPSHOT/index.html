@@ -27,7 +27,8 @@
 var LDF ={
   subject: '',
   predicate: '',
-  object: ''
+  object: '',
+  Graph:''
 }
 
 var LDFView = {
@@ -58,7 +59,15 @@ var LDFView = {
           style: 'width: 70%; border: none; border-bottom: 1px solid #ccc; outline: none; color: #be1622; font-size:15px;'
         })
       ]),
-     
+      m('div', { style: 'margin-bottom: 10px; margin-left:27px;' }, [
+        m('label', { style: 'display: inline-block; width: 80px; font-weight: bold;' }, "Graph:"),
+        m("input[type=text]", {
+          value: LDF.Graph,
+          oninput: function(e) { LDF.Graph = e.target.value; },
+          style: 'width: 70%; border: none; border-bottom: 1px solid #ccc; outline: none; color: #be1622; font-size:15px;'
+        })
+      ]),
+
       m('button', {
         class: 'custom-button',
         style: {
@@ -70,7 +79,7 @@ var LDFView = {
           marginRight: '10px'
         },
         onclick: function(e) {
-          Triplet.search(LDF.subject, LDF.predicate, LDF.object);
+          Triplet.search(LDF.subject, LDF.predicate, LDF.object, LDF.Graph);
         }
       }, m('span', {
         style: {
@@ -92,10 +101,11 @@ var LDFView = {
         },
         disabled: Login.name === '',
         onclick: function(e) {
-          Triplet.save(LDF.subject, LDF.predicate, LDF.object);
+          Triplet.save(LDF.subject, LDF.predicate, LDF.object, LDF.Graph);
           LDF.subject = '';
           LDF.predicate = '';
           LDF.object = '';
+          LDF.Graph = '';
           m.redraw();
         }
       }, m('span', {
@@ -116,7 +126,7 @@ var Triplet = {
   limit: 100,
   list: [],
   isSearching: false,
-  currentSearch: { subject: '', predicate: '', object: '' },
+  currentSearch: { subject: '', predicate: '', object: '', Graph: '' },
   noResultMessage : null,
   loadList: function() {
       const startTime = new Date();
@@ -136,16 +146,16 @@ var Triplet = {
       })
   },
 
-  save: function(subject, predicate, object) {
+  save: function(subject, predicate, object, Graph) {
     console.log("saving...",Triplet.current)
-    if (!subject || !predicate || !object) {
-      alert("Please fill in all fields (subject, predicate, object).");
+    if (!subject || !predicate || !object || !Graph) {
+      alert("Please fill in all fields (subject, predicate, object, Graph).");
       return;
     }
 
     return m.request({
         method: "GET",
-        url: `_ah/api/myApi/v1/addTriplet/${subject}/${predicate}/${object}`+'?access_token=' + Login.token
+        url: `_ah/api/myApi/v1/addTriplet/${subject}/${predicate}/${object}/${Graph}`+'?access_token=' + Login.token
     })
     .then(function(result) {
       //console.log("got:",result)
@@ -157,14 +167,15 @@ var Triplet = {
     })
   },
 
-  search: function(subject, predicate, object) {
+  search: function(subject, predicate, object, Graph) {
     console.log("searching...", Triplet.current);
-    Triplet.isSearching = (subject !== '' || predicate !== '' || object !== '');
-    Triplet.currentSearch = { subject, predicate, object };
+    Triplet.isSearching = (subject !== '' || predicate !== '' || object !== '' || Graph !== '');
+    Triplet.currentSearch = { subject, predicate, object, Graph };
     if (Triplet.isSearching){
       LDF.subject = Triplet.currentSearch.subject;
       LDF.predicate = Triplet.currentSearch.predicate;
       LDF.object = Triplet.currentSearch.object;
+      LDF.Graph = Triplet.currentSearch.Graph;
     }
     Triplet.offset = Math.min(Triplet.offset, Math.max(0, Triplet.totalCount - Triplet.limit));
     //console.log("Offset: ",Triplet.offset);
@@ -172,6 +183,7 @@ var Triplet = {
     if (subject) queryParams.push(`subject=${encodeURIComponent(subject)}`);
     if (predicate) queryParams.push(`predicate=${encodeURIComponent(predicate)}`);
     if (object) queryParams.push(`object=${encodeURIComponent(object)}`);
+    if (Graph) queryParams.push(`Graph=${encodeURIComponent(Graph)}`);
     queryParams.push(`offset=${encodeURIComponent(Triplet.offset)}`);
     queryParams.push(`limit=${encodeURIComponent(Triplet.limit)}`);
 
@@ -216,7 +228,8 @@ var Triplet = {
     Triplet.search(
       Triplet.currentSearch.subject,
       Triplet.currentSearch.predicate,
-      Triplet.currentSearch.object
+      Triplet.currentSearch.object,
+      Triplet.currentSearch.Graph
     );
   } else {
     Triplet.loadList();
@@ -229,7 +242,8 @@ var Triplet = {
       Triplet.search(
         Triplet.currentSearch.subject,
         Triplet.currentSearch.predicate,
-        Triplet.currentSearch.object
+        Triplet.currentSearch.object,
+        Triplet.currentSearch.Graph
       );
     } else {
       Triplet.loadList();
@@ -245,7 +259,8 @@ var Triplet = {
       Triplet.search(
         Triplet.currentSearch.subject,
         Triplet.currentSearch.predicate,
-        Triplet.currentSearch.object
+        Triplet.currentSearch.object,
+        Triplet.currentSearch.Graph
       );
     } else {
       Triplet.loadList();
@@ -263,7 +278,7 @@ var TripleView = {
         m('span', `Showing triples ${Triplet.offset + 1} to ${Math.min(Triplet.offset + Triplet.limit, Triplet.totalCount)} of ± ${Triplet.totalCount} with ${Triplet.limit} triples per page.`),
         m('div', { style: 'margin-left: 15px;' }, [
           Triplet.offset > 0 ? m('button', {
-            style: 'margin: 0 5px; font-weight: bold; padding: 5px 15px; background-color: white; color: #be1622; font-size: 17px; cursor: pointer; border: none;',
+            style: 'margin: 0 5px; font-weight: bold; padding: 5px 15px; background-color: white; color: #be1622; font-size: 17px; cursor: pointer; border: none; ',
             onclick: Triplet.first
           }, 'first') : null,
           Triplet.offset > 0 ? m('button', {
@@ -286,7 +301,7 @@ var TripleView = {
 
             return m("tr", [
               m('td', { 
-                style: "width:10%; padding: 0 10px; cursor: pointer; border: none; background-color: white; color: black; font-size: 14px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;", 
+                style: "width:12%; padding: 0 10px; cursor: pointer; border: none; background-color: white; color: black; font-size: 14px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;", 
                 onmouseover: (e) => {
                   e.target.style.color = "#be1622";
                   e.target.style.textDecoration = "underline";
@@ -300,12 +315,13 @@ var TripleView = {
                   LDF.subject = item.properties.subject;
                   LDF.predicate = '';
                   LDF.object = '';
-                  Triplet.search(item.properties.subject, '', '');
+                  LDF.Graph = '';
+                  Triplet.search(item.properties.subject, '', '', '');
                 }
               }, getLastPart(item.properties.subject)),
 
               m('td', { 
-                style: "width:15%; padding: 0 10px; cursor: pointer; border: none; background-color: white; color: black; font-size: 14px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;", 
+                style: "width:12%; padding: 0 10px; cursor: pointer; border: none; background-color: white; color: black; font-size: 14px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;", 
                 onmouseover: (e) => {
                   e.target.style.color = "#be1622";
                   e.target.style.textDecoration = "underline";
@@ -319,12 +335,13 @@ var TripleView = {
                   LDF.subject = '';
                   LDF.predicate = item.properties.predicate;
                   LDF.object = '';
-                  Triplet.search('', item.properties.predicate, '');
+                  LDF.Graph = '';
+                  Triplet.search('', item.properties.predicate, '', '');
                 }
               }, getLastPart(item.properties.predicate)),
 
               m('td', {
-                style: "width: 75%; padding: 0 10px; cursor: pointer; border: none; background-color: white; color: black; font-size: 14px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;", 
+                style: "width: 40%; padding: 0 10px; cursor: pointer; border: none; background-color: white; color: black; font-size: 14px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;", 
                 onmouseover: (e) => {
                   e.target.style.color = "#be1622";
                   e.target.style.textDecoration = "underline";
@@ -338,9 +355,30 @@ var TripleView = {
                   LDF.subject = '';
                   LDF.predicate = '';
                   LDF.object = item.properties.object;
-                  Triplet.search('', '', item.properties.object);
+                  LDF.Graph = '';
+                  Triplet.search('', '', item.properties.object, '');
                 }
               }, item.properties.object),
+
+              m('td', {
+                style: "width: 35%; padding: 0 10px; cursor: pointer; border: none; background-color: white; color: black; font-size: 14px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;", 
+                onmouseover: (e) => {
+                  e.target.style.color = "#be1622";
+                  e.target.style.textDecoration = "underline";
+                  e.target.style.textDecorationColor = "#be1622";
+                },
+                onmouseout: (e) => {
+                  e.target.style.color = "black";
+                  e.target.style.textDecoration = "none";
+                },
+                onclick: () => {
+                  LDF.subject = '';
+                  LDF.predicate = '';
+                  LDF.object = '';
+                  LDF.Graph = item.properties.Graph;
+                  Triplet.search('', '', '',item.properties.Graph);
+                }
+              }, item.properties.Graph),
             ]);
           })
         ),

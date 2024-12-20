@@ -38,6 +38,11 @@ import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.appengine.api.datastore.QueryResultList;
 import com.google.appengine.api.datastore.Transaction;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Api(name = &quot;myApi&quot;,
      version = &quot;v1&quot;,
      audiences = &quot;418717520776-vd1hi1ukmn4494md8h75odm29dn05n8i.apps.googleusercontent.com&quot;,
@@ -52,21 +57,21 @@ import com.google.appengine.api.datastore.Transaction;
 		)
 )
 
-<span class="nc" id="L55">public class TripletEndpoint {</span>
+<span class="nc" id="L60">public class TripletEndpoint {</span>
 
 	@ApiMethod(name = &quot;showTriplets&quot;, httpMethod = HttpMethod.GET)
 	public PaginatedResult showTriplets(@Nullable @Named(&quot;offset&quot;) Integer offset, @Nullable @Named(&quot;limit&quot;) Integer limit) {
-<span class="nc bnc" id="L59" title="All 2 branches missed.">		if (offset == null) offset = 0;</span>
-<span class="nc bnc" id="L60" title="All 2 branches missed.">		if (limit == null) limit = 100;</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">		if (offset == null) offset = 0;</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		if (limit == null) limit = 100;</span>
 	
-<span class="nc" id="L62">		Query q = new Query(&quot;Triplet&quot;);</span>
-<span class="nc" id="L63">		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();</span>
-<span class="nc" id="L64">		PreparedQuery pq = datastore.prepare(q);</span>
+<span class="nc" id="L67">		Query q = new Query(&quot;Triplet&quot;);</span>
+<span class="nc" id="L68">		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();</span>
+<span class="nc" id="L69">		PreparedQuery pq = datastore.prepare(q);</span>
 
-<span class="nc" id="L66">		int totalCount = pq.countEntities(FetchOptions.Builder.withDefaults());</span>
-<span class="nc" id="L67">		List&lt;Entity&gt; result = pq.asList(FetchOptions.Builder.withOffset(offset).limit(limit));</span>
+<span class="nc" id="L71">		int totalCount = pq.countEntities(FetchOptions.Builder.withDefaults());</span>
+<span class="nc" id="L72">		List&lt;Entity&gt; result = pq.asList(FetchOptions.Builder.withOffset(offset).limit(limit));</span>
 	
-<span class="nc" id="L69">		return new PaginatedResult(result, totalCount);</span>
+<span class="nc" id="L74">		return new PaginatedResult(result, totalCount);</span>
 	}
 
 	@ApiMethod(name = &quot;searchTriplet&quot;, httpMethod = HttpMethod.GET, path = &quot;searchTriplet&quot;)
@@ -74,48 +79,54 @@ import com.google.appengine.api.datastore.Transaction;
 		@Nullable @Named(&quot;subject&quot;) String subject,
 		@Nullable @Named(&quot;predicate&quot;) String predicate,
 		@Nullable @Named(&quot;object&quot;) String object,
+		@Nullable @Named(&quot;Graph&quot;) String Graph,
 		@Nullable @Named(&quot;offset&quot;) Integer offset,
 		@Nullable @Named(&quot;limit&quot;) Integer limit
 		) throws UnauthorizedException {
 		
-<span class="nc" id="L81">		Query q = new Query(&quot;Triplet&quot;);</span>
+<span class="nc" id="L87">		Query q = new Query(&quot;Triplet&quot;);</span>
 		
-<span class="nc bnc" id="L83" title="All 4 branches missed.">		if (subject != null &amp;&amp; !subject.isEmpty()) {</span>
-<span class="nc" id="L84">			q.setFilter(new FilterPredicate(&quot;subject&quot;, FilterOperator.EQUAL, subject));</span>
+<span class="nc bnc" id="L89" title="All 4 branches missed.">		if (subject != null &amp;&amp; !subject.isEmpty()) {</span>
+<span class="nc" id="L90">			q.setFilter(new FilterPredicate(&quot;subject&quot;, FilterOperator.EQUAL, subject));</span>
 		}
 		
-<span class="nc bnc" id="L87" title="All 4 branches missed.">		if (predicate != null &amp;&amp; !predicate.isEmpty()) {</span>
-<span class="nc" id="L88">			q.setFilter(new FilterPredicate(&quot;predicate&quot;, FilterOperator.EQUAL, predicate));</span>
+<span class="nc bnc" id="L93" title="All 4 branches missed.">		if (predicate != null &amp;&amp; !predicate.isEmpty()) {</span>
+<span class="nc" id="L94">			q.setFilter(new FilterPredicate(&quot;predicate&quot;, FilterOperator.EQUAL, predicate));</span>
 		}
 		
-<span class="nc bnc" id="L91" title="All 4 branches missed.">		if (object != null &amp;&amp; !object.isEmpty()) {</span>
-<span class="nc" id="L92">			q.setFilter(new FilterPredicate(&quot;object&quot;, FilterOperator.EQUAL, object));</span>
+<span class="nc bnc" id="L97" title="All 4 branches missed.">		if (object != null &amp;&amp; !object.isEmpty()) {</span>
+<span class="nc" id="L98">			q.setFilter(new FilterPredicate(&quot;object&quot;, FilterOperator.EQUAL, object));</span>
 		}
 		
-<span class="nc" id="L95">		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();</span>
-<span class="nc" id="L96">		PreparedQuery pq = datastore.prepare(q);</span>
+<span class="nc bnc" id="L101" title="All 4 branches missed.">		if (Graph != null &amp;&amp; !Graph.isEmpty()) {</span>
+<span class="nc" id="L102">			q.setFilter(new FilterPredicate(&quot;Graph&quot;, FilterOperator.EQUAL, Graph));</span>
+		}
 
-<span class="nc" id="L98">		int totalCount = pq.countEntities(FetchOptions.Builder.withDefaults());</span>
-<span class="nc" id="L99">		List&lt;Entity&gt; result = pq.asList(FetchOptions.Builder.withOffset(offset).limit(limit));</span>
-<span class="nc" id="L100">		return new PaginatedResult(result, totalCount);</span>
+<span class="nc" id="L105">		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();</span>
+<span class="nc" id="L106">		PreparedQuery pq = datastore.prepare(q);</span>
+
+<span class="nc" id="L108">		int totalCount = pq.countEntities(FetchOptions.Builder.withDefaults());</span>
+<span class="nc" id="L109">		List&lt;Entity&gt; result = pq.asList(FetchOptions.Builder.withOffset(offset).limit(limit));</span>
+<span class="nc" id="L110">		return new PaginatedResult(result, totalCount);</span>
 	}
 
 	@ApiMethod(name = &quot;addTriplet&quot;, httpMethod = HttpMethod.GET)
-	public Entity addTriplet(User user, @Named(&quot;subject&quot;) String subject, @Named(&quot;predicate&quot;) String predicate, @Named(&quot;object&quot;) String object) throws UnauthorizedException {
-<span class="nc" id="L105">		System.out.println(&quot;The User is : &quot; +user);</span>
-<span class="nc bnc" id="L106" title="All 2 branches missed.">		if (user == null) {</span>
-<span class="nc" id="L107">			throw new UnauthorizedException(&quot;Invalid credentials&quot;);</span>
+	public Entity addTriplet(User user, @Named(&quot;subject&quot;) String subject, @Named(&quot;predicate&quot;) String predicate, @Named(&quot;object&quot;) String object, @Named(&quot;Graph&quot;) String Graph) throws UnauthorizedException {
+<span class="nc" id="L115">		System.out.println(&quot;The User is : &quot; +user);</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		if (user == null) {</span>
+<span class="nc" id="L117">			throw new UnauthorizedException(&quot;Invalid credentials&quot;);</span>
 		}
-<span class="nc" id="L109">		Entity e = new Entity(&quot;Triplet&quot;, &quot;&quot; + subject + predicate + object);</span>
-<span class="nc" id="L110">		e.setProperty(&quot;subject&quot;, subject);</span>
-<span class="nc" id="L111">		e.setProperty(&quot;predicate&quot;, predicate);</span>
-<span class="nc" id="L112">		e.setProperty(&quot;object&quot;, object);</span>
+<span class="nc" id="L119">		Entity e = new Entity(&quot;Triplet&quot;, &quot;&quot; + subject + predicate + object + Graph);</span>
+<span class="nc" id="L120">		e.setProperty(&quot;subject&quot;, subject);</span>
+<span class="nc" id="L121">		e.setProperty(&quot;predicate&quot;, predicate);</span>
+<span class="nc" id="L122">		e.setProperty(&quot;object&quot;, object);</span>
+<span class="nc" id="L123">		e.setProperty(&quot;Graph&quot;, Graph);</span>
 
-<span class="nc" id="L114">		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();</span>
-<span class="nc" id="L115">		datastore.put(e);</span>
+<span class="nc" id="L125">		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();</span>
+<span class="nc" id="L126">		datastore.put(e);</span>
 
-<span class="nc" id="L117">		return e;</span>
+<span class="nc" id="L128">		return e;</span>
 	}
-   	
+
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>
