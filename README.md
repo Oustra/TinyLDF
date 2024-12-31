@@ -61,3 +61,9 @@ TinyLDF is a lightweight Linked Data Fragments platform that allows users to per
 ---
 
 ## Screens
+
+### Screen 1: Home Page (Before Authentication)
+![Home Page Before Auth](dat/1.png)
+
+### Screen 2: Home Page (After Authentication)
+![Home Page After Auth](dat/2.png)
