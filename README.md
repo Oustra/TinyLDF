@@ -60,4 +60,4 @@ TinyLDF is a lightweight Linked Data Fragments platform that allows users to per
 
 ---
 
-## Technologies Used
+## Screens
