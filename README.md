@@ -4,14 +4,6 @@ TinyLDF is a lightweight Linked Data Fragments platform that allows users to per
 
 ---
 
-# Group Members
-   - FENNASSI Oussama
-   - MOTTET Valentin
-   - OULBOUB Safaa
-   - EL HMIDI Yasmina
-
----
-
 ## Features
 
 ### Core Functionalities
@@ -65,3 +57,7 @@ TinyLDF is a lightweight Linked Data Fragments platform that allows users to per
 
 - **Authentication**:
   - Google Authentication for secure access to quad creation features.
+
+---
+
+## Technologies Used
